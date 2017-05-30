@@ -93,7 +93,7 @@ func (l Link) MarshalJSON() ([]byte, error) {
 }
 
 // Links contains a map of custom Link objects as given by an element.
-type Links map[string]Link
+type Links map[string]interface{}
 
 // Data is a general struct for document data and included data.
 type Data struct {
