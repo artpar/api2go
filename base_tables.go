@@ -5,6 +5,7 @@ import (
   "github.com/satori/go.uuid"
   log "github.com/Sirupsen/logrus"
   underscore "github.com/ahl5esoft/golang-underscore"
+  "strings"
   "github.com/artpar/api2go/jsonapi"
   "errors"
 )
@@ -29,8 +30,47 @@ func (tr *TableRelation) GetSubjectName() string {
   }
   return tr.SubjectName
 }
+
 func (tr *TableRelation) GetSubject() string {
   return tr.Subject
+}
+
+func (tr *TableRelation) GetJoinTableName() string {
+  return tr.Subject + "_" + tr.GetSubjectName() + "_has_" + tr.Object + "_" + tr.GetObjectName()
+}
+
+func (tr *TableRelation) GetJoinString() string {
+
+  if tr.Relation == "has_one" {
+    return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+  } else if tr.Relation == "belongs_to" {
+    return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+  } else if tr.Relation == "has_many" || tr.Relation == "has_many_and_belongs_to_many" {
+    return fmt.Sprintf(" %s j1 on      j1.%s = %s.id             join %s  on  j1.%s = %s.%s ",
+      tr.GetJoinTableName(), tr.SubjectName, tr.GetSubject(), tr.GetObject(), tr.GetObjectName(), tr.GetObject(), "id")
+  } else {
+    log.Errorf("Not implemented join: %v", tr)
+  }
+
+  return ""
+}
+
+func (tr *TableRelation) GetReverseJoinString() string {
+
+  if tr.Relation == "has_one" {
+    return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+  } else if tr.Relation == "belongs_to" {
+    return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+  } else if tr.Relation == "has_many" {
+
+    //select * from user join user_has_usergroup j1 on j1.user_id = user.id  join usergroup on j1.usergroup_id = usergroup.id
+    return fmt.Sprintf(" %s j1 on j1.%s = %s.id join %s on j1.%s = %s.%s ",
+      tr.GetJoinTableName(), tr.GetObjectName(), tr.GetObject(), tr.GetSubject(), tr.GetSubjectName(), tr.GetSubject(), "id")
+  } else {
+    log.Errorf("Not implemented join: %v", tr)
+  }
+
+  return ""
 }
 
 func (tr *TableRelation) GetRelation() string {
@@ -50,21 +90,21 @@ func (tr *TableRelation) GetObject() string {
 
 func NewTableRelation(subject, relation, object string) TableRelation {
   return TableRelation{
-    Subject:subject,
-    Relation:relation,
-    Object:object,
-    SubjectName:subject + "_id",
-    ObjectName:object + "_id",
+    Subject:     subject,
+    Relation:    relation,
+    Object:      object,
+    SubjectName: subject + "_id",
+    ObjectName:  object + "_id",
   }
 }
 
 func NewTableRelationWithNames(subject, subjectName, relation, object, objectName string) *TableRelation {
   return &TableRelation{
-    Subject:subject,
-    Relation:relation,
-    Object:object,
-    SubjectName:subjectName,
-    ObjectName:objectName,
+    Subject:     subject,
+    Relation:    relation,
+    Object:      object,
+    SubjectName: subjectName,
+    ObjectName:  objectName,
   }
 }
 
@@ -96,7 +136,7 @@ func (a *Api2GoModel) HasColumn(colName string) bool {
 
 func (a *Api2GoModel) HasMany(colName string) bool {
   for _, rel := range a.relations {
-    if rel.GetRelation() == "has_many" && rel.GetObjectName() == colName {
+    if rel.GetRelation() == "has_many" && rel.GetObject() == colName {
       log.Infof("Found %v relation: %v", colName, rel)
       return true
     }
@@ -109,24 +149,40 @@ func (a *Api2GoModel) GetRelations() []TableRelation {
 }
 
 type ColumnInfo struct {
-  Name            string
-  ColumnName      string
-  ColumnType      string
-  IsPrimaryKey    bool
-  IsAutoIncrement bool
-  IsIndexed       bool
-  IsUnique        bool
-  IsNullable      bool
-  IsForeignKey    bool
-  IncludeInApi    bool
-  ForeignKeyData  ForeignKeyData
-  DataType        string
-  DefaultValue    string
+  Name            string `db:"name"`
+  ColumnName      string `db:"column_name"`
+  ColumnType      string `db:"column_type"`
+  IsPrimaryKey    bool   `db:"is_primary_key"`
+  IsAutoIncrement bool   `db:"is_auto_increment"`
+  IsIndexed       bool   `db:"is_indexed"`
+  IsUnique        bool   `db:"is_unique"`
+  IsNullable      bool   `db:"is_nullable"`
+  Permission      uint64   `db:"permission"`
+  IsForeignKey    bool   `db:"is_foreign_key"`
+  IncludeInApi    bool   `db:"include_in_api"`
+  ForeignKeyData  ForeignKeyData   `db:"foreign_key_data"`
+  DataType        string   `db:"data_type"`
+  DefaultValue    string   `db:"default_value"`
 }
 
 type ForeignKeyData struct {
   TableName  string
   ColumnName string
+}
+
+func (f *ForeignKeyData) Scan(src interface{}) error {
+  strValue, ok := src.([]uint8)
+  if !ok {
+    return fmt.Errorf("metas field must be a string, got %T instead", src)
+  }
+
+  parts := strings.Split(string(strValue), "(")
+  tableName := parts[0]
+  columnName := strings.Split(parts[1], ")")[0]
+
+  f.TableName = tableName
+  f.ColumnName = columnName
+  return nil
 }
 
 func (f ForeignKeyData) String() string {
@@ -135,20 +191,20 @@ func (f ForeignKeyData) String() string {
 
 func NewApi2GoModelWithData(name string, columns []ColumnInfo, defaultPermission int, relations []TableRelation, m map[string]interface{}) *Api2GoModel {
   return &Api2GoModel{
-    typeName: name,
-    columns: columns,
-    relations: relations,
-    Data: m,
+    typeName:          name,
+    columns:           columns,
+    relations:         relations,
+    Data:              m,
     defaultPermission: defaultPermission,
   }
 }
 func NewApi2GoModel(name string, columns []ColumnInfo, defaultPermission int, relations []TableRelation) *Api2GoModel {
   //fmt.Printf("New columns: %v", columns)
   return &Api2GoModel{
-    typeName: name,
+    typeName:          name,
     defaultPermission: defaultPermission,
-    relations: relations,
-    columns: columns,
+    relations:         relations,
+    columns:           columns,
   }
 }
 
@@ -161,8 +217,8 @@ func EndsWith(str string, endsWith string) (string, bool) {
     return "", false
   }
 
-  suffix := str[len(str) - len(endsWith):]
-  prefix := str[:len(str) - len(endsWith)]
+  suffix := str[len(str)-len(endsWith):]
+  prefix := str[:len(str)-len(endsWith)]
 
   i := suffix == endsWith
   return prefix, i
@@ -178,7 +234,7 @@ func EndsWithCheck(str string, endsWith string) (bool) {
     return false
   }
 
-  suffix := str[len(str) - len(endsWith):]
+  suffix := str[len(str)-len(endsWith):]
   i := suffix == endsWith
   return i
 
@@ -248,9 +304,9 @@ func (m *Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
         }
 
         ref := jsonapi.ReferenceID{
-          Type: rel.GetObject(),
-          Name: rel.GetObjectName(),
-          ID: m.Data[rel.GetObjectName()].(string),
+          Type:         rel.GetObject(),
+          Name:         rel.GetObjectName(),
+          ID:           m.Data[rel.GetObjectName()].(string),
           Relationship: jsonapi.DefaultRelationship,
         }
         references = append(references, ref)
@@ -286,7 +342,6 @@ func (model *Api2GoModel) GetReferences() []jsonapi.Reference {
 
   references := make([]jsonapi.Reference, 0)
   //
-
 
   log.Infof("Relations: %v", model.relations)
   for _, relation := range model.relations {
@@ -367,7 +422,6 @@ func (m *Api2GoModel)  GetAllAsAttributes() map[string]interface{} {
   }
   return attrs
 }
-
 
 func (m *Api2GoModel)  InitializeObject(interface{}) {
   log.Infof("initialize object: %v", m)
