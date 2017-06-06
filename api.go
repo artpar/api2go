@@ -18,12 +18,12 @@ import (
 )
 
 const (
-  codeInvalidQueryFields = "API2GO_INVALID_FIELD_QUERY_PARAM"
+  codeInvalidQueryFields  = "API2GO_INVALID_FIELD_QUERY_PARAM"
   defaultContentTypHeader = "application/vnd.api+json"
 )
 
 var (
-  queryPageRegex = regexp.MustCompile(`^page\[(\w+)\]$`)
+  queryPageRegex   = regexp.MustCompile(`^page\[(\w+)\]$`)
   queryFieldsRegex = regexp.MustCompile(`^fields\[(\w+)\]$`)
 )
 
@@ -104,7 +104,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
       query, _ := url.QueryUnescape(params.Encode())
       result["first_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
 
-      params.Set("page[number]", strconv.FormatUint(number - 1, 10))
+      params.Set("page[number]", strconv.FormatUint(number-1, 10))
       query, _ = url.QueryUnescape(params.Encode())
       result["prev_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
     }
@@ -129,7 +129,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
     result["to"] = (number) * size
 
     if number != totalPages {
-      params.Set("page[number]", strconv.FormatUint(number + 1, 10))
+      params.Set("page[number]", strconv.FormatUint(number+1, 10))
       query, _ := url.QueryUnescape(params.Encode())
       result["next_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
 
@@ -167,11 +167,11 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 
     // check if there are more entries to be loaded
     if (offset + limit) < uint64(count) {
-      params.Set("page[offset]", strconv.FormatUint(offset + limit, 10))
+      params.Set("page[offset]", strconv.FormatUint(offset+limit, 10))
       query, _ := url.QueryUnescape(params.Encode())
       result["next_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
 
-      params.Set("page[offset]", strconv.FormatUint(uint64(count) - limit, 10))
+      params.Set("page[offset]", strconv.FormatUint(uint64(count)-limit, 10))
       query, _ = url.QueryUnescape(params.Encode())
       result["last_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
     }
@@ -269,7 +269,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
     api.contextPool.Put(c)
   })
 
-  api.router.Handle("OPTIONS", baseURL + "/:id", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+  api.router.Handle("OPTIONS", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
     c := api.contextPool.Get().(APIContexter)
     c.Reset()
     api.middlewareChain(c, w, r)
@@ -291,7 +291,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
     }
   })
 
-  api.router.Handle("GET", baseURL + "/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+  api.router.Handle("GET", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
     info := requestInfo(r, api)
     c := api.contextPool.Get().(APIContexter)
     c.Reset()
@@ -308,7 +308,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
   if ok {
     relations := casted.GetReferences()
     for _, relation := range relations {
-      api.router.Handle("GET", baseURL + "/:id/relationships/" + relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
+      api.router.Handle("GET", baseURL+"/:id/relationships/"+relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
         return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
           info := requestInfo(r, api)
           c := api.contextPool.Get().(APIContexter)
@@ -322,7 +322,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
         }
       }(relation))
 
-      api.router.Handle("GET", baseURL + "/:id/" + relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
+      api.router.Handle("GET", baseURL+"/:id/"+relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
         return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
           info := requestInfo(r, api)
           c := api.contextPool.Get().(APIContexter)
@@ -336,7 +336,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
         }
       }(relation))
 
-      api.router.Handle("PATCH", baseURL + "/:id/relationships/" + relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
+      api.router.Handle("PATCH", baseURL+"/:id/relationships/"+relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
         return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
           c := api.contextPool.Get().(APIContexter)
           c.Reset()
@@ -351,7 +351,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
 
       if _, ok := ptrPrototype.(jsonapi.EditToManyRelations); ok && relation.Name == jsonapi.Pluralize(relation.Name) {
         // generate additional routes to manipulate to-many relationships
-        api.router.Handle("POST", baseURL + "/:id/relationships/" + relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
+        api.router.Handle("POST", baseURL+"/:id/relationships/"+relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
           return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
             c := api.contextPool.Get().(APIContexter)
             c.Reset()
@@ -364,7 +364,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
           }
         }(relation))
 
-        api.router.Handle("DELETE", baseURL + "/:id/relationships/" + relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
+        api.router.Handle("DELETE", baseURL+"/:id/relationships/"+relation.Name, func(relation jsonapi.Reference) routing.HandlerFunc {
           return func(w http.ResponseWriter, r *http.Request, params map[string]string) {
             c := api.contextPool.Get().(APIContexter)
             c.Reset()
@@ -392,7 +392,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
     }
   })
 
-  api.router.Handle("DELETE", baseURL + "/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+  api.router.Handle("DELETE", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
     c := api.contextPool.Get().(APIContexter)
     c.Reset()
     api.middlewareChain(c, w, r)
@@ -403,7 +403,7 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source CRUD) *r
     }
   })
 
-  api.router.Handle("PATCH", baseURL + "/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+  api.router.Handle("PATCH", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
     info := requestInfo(r, api)
     c := api.contextPool.Get().(APIContexter)
     c.Reset()
@@ -528,8 +528,8 @@ func (res *resource) handleLinked(c APIContexter, api *API, w http.ResponseWrite
   for _, resource := range api.resources {
     if resource.name == linked.Type {
       request := buildRequest(c, r)
-      request.QueryParams[res.name + "_id"] = []string{id}
-      request.QueryParams[res.name + "Name"] = []string{linked.Name}
+      request.QueryParams[res.name+"_id"] = []string{id}
+      request.QueryParams[res.name+"Name"] = []string{linked.Name}
 
       if source, ok := resource.source.(PaginatedFindAll); ok {
         // check for pagination, otherwise normal FindAll
@@ -565,7 +565,7 @@ func (res *resource) handleLinked(c APIContexter, api *API, w http.ResponseWrite
 
   return NewHTTPError(
     errors.New("Not Found"),
-    "No resource handler is registered to handle the linked resource " + linked.Name,
+    "No resource handler is registered to handle the linked resource "+linked.Name,
     http.StatusNotFound,
   )
 }
@@ -614,9 +614,9 @@ func (res *resource) handleCreate(c APIContexter, w http.ResponseWriter, r *http
   }
 
   if len(prefix) > 0 {
-    w.Header().Set("Location", "/" + prefix + "/" + res.name + "/" + result.GetID())
+    w.Header().Set("Location", "/"+prefix+"/"+res.name+"/"+result.GetID())
   } else {
-    w.Header().Set("Location", "/" + res.name + "/" + result.GetID())
+    w.Header().Set("Location", "/"+res.name+"/"+result.GetID())
   }
 
   // handle 200 status codes
@@ -696,7 +696,7 @@ func (res *resource) handleUpdate(c APIContexter, w http.ResponseWriter, r *http
 
 func (res *resource) handleReplaceRelation(c APIContexter, w http.ResponseWriter, r *http.Request, params map[string]string, relation jsonapi.Reference) error {
   var (
-    err error
+    err     error
     editObj interface{}
   )
 
@@ -746,7 +746,7 @@ func (res *resource) handleReplaceRelation(c APIContexter, w http.ResponseWriter
 
 func (res *resource) handleAddToManyRelation(c APIContexter, w http.ResponseWriter, r *http.Request, params map[string]string, relation jsonapi.Reference) error {
   var (
-    err error
+    err     error
     editObj interface{}
   )
 
@@ -818,7 +818,7 @@ func (res *resource) handleAddToManyRelation(c APIContexter, w http.ResponseWrit
 
 func (res *resource) handleDeleteToManyRelation(c APIContexter, w http.ResponseWriter, r *http.Request, params map[string]string, relation jsonapi.Reference) error {
   var (
-    err error
+    err     error
     editObj interface{}
   )
 
