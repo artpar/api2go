@@ -3,7 +3,7 @@ package api2go
 import (
   "fmt"
   "github.com/satori/go.uuid"
-  log "github.com/Sirupsen/logrus"
+  log "github.com/sirupsen/logrus"
   underscore "github.com/ahl5esoft/golang-underscore"
   "strings"
   "github.com/artpar/api2go/jsonapi"
