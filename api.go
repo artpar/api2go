@@ -115,6 +115,11 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
     if err != nil {
       return
     }
+
+    if size == 0 {
+      size = 1
+    }
+
     totalPages := (uint64(count) / size)
     if (uint64(count) % size) != 0 {
       // there is one more page with some len(items) < size
@@ -290,7 +295,8 @@ func (api *API) addResource(prototype jsonapi.MarshalIdentifier, source interfac
 			w.Header().Set("Allow", strings.Join(getAllowedMethods(source, false), ","))
 			w.WriteHeader(http.StatusNoContent)
 			api.contextPool.Put(c)
-		})api.router.Handle("GET", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+		})
+		api.router.Handle("GET", baseURL+"/:id", func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 		info := requestInfo(r, api)
 		c := api.contextPool.Get().(APIContexter)
 		c.Reset()
@@ -511,7 +517,8 @@ func (res *resource) handleRead(c APIContexter, w http.ResponseWriter, r *http.R
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceGetter interface", res.name)
-	}id := params["id"]
+	}
+	id := params["id"]
 
   response, err := source.FindOne(id, buildRequest(c, r))
 
@@ -527,7 +534,8 @@ func (res *resource) handleReadRelation(c APIContexter, w http.ResponseWriter, r
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceGetter interface", res.name)
-	}id := params["id"]
+	}
+	id := params["id"]
 
   obj, err := source.FindOne(id, buildRequest(c, r))
   if err != nil {
@@ -605,7 +613,8 @@ func (res *resource) handleCreate(c APIContexter, w http.ResponseWriter, r *http
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceCreator interface", res.name)
-	}ctx, err := unmarshalRequest(r)
+	}
+	ctx, err := unmarshalRequest(r)
 	if err != nil {
 		return err
 	}
@@ -673,7 +682,8 @@ func (res *resource) handleUpdate(c APIContexter, w http.ResponseWriter, r *http
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceUpdater interface", res.name)
-	}id := params["id"]
+	}
+	id := params["id"]
 	obj, err := source.FindOne(id, buildRequest(c, r))
 	if err != nil {
 		return err
@@ -737,7 +747,9 @@ func (res *resource) handleReplaceRelation(c APIContexter, w http.ResponseWriter
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceUpdater interface", res.name)
-	}var (
+	}
+
+	var (
 		err     error
 		editObj interface{}
 	)
@@ -791,7 +803,8 @@ func (res *resource) handleAddToManyRelation(c APIContexter, w http.ResponseWrit
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceUpdater interface", res.name)
-	}var (
+	}
+	var (
 		err     error
 		editObj interface{}
 	)
@@ -867,7 +880,8 @@ func (res *resource) handleDeleteToManyRelation(c APIContexter, w http.ResponseW
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceUpdater interface", res.name)
-	}var (
+	}
+	var (
 		err     error
 		editObj interface{}
 	)
@@ -952,7 +966,8 @@ func (res *resource) handleDelete(c APIContexter, w http.ResponseWriter, r *http
 
 	if !ok {
 		return fmt.Errorf("Resource %s does not implement the ResourceDeleter interface", res.name)
-	}id := params["id"]
+	}
+	id := params["id"]
 	response, err := source.Delete(id, buildRequest(c, r))
 	if err != nil {
 		return err

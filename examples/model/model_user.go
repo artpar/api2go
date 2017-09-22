@@ -17,6 +17,12 @@ type User struct {
   exists        bool
 }
 
+func (s User) GetAttributes() map[string]interface{} {
+  return map[string]interface{}{
+    "ID": "",
+  }
+}
+
 // GetID to satisfy jsonapi.MarshalIdentifier interface
 func (u User) GetID() string {
   return u.ID

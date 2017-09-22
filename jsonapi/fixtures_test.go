@@ -33,6 +33,13 @@ func (c Comment) GetID() string {
 	return fmt.Sprintf("%d", c.ID)
 }
 
+func (s Comment) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
+
 func (c *Comment) SetID(stringID string) error {
 	id, err := strconv.Atoi(stringID)
 	if err != nil {
@@ -49,6 +56,13 @@ type User struct {
 	Name     string `json:"name"`
 	Password string `json:"-"`
 }
+
+func (s User) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 
 func (u User) GetID() string {
 	return fmt.Sprintf("%d", u.ID)
@@ -108,6 +122,13 @@ type Post struct {
 	AuthorID      sql.NullInt64 `json:"-"`
 	AuthorEmpty   bool          `json:"-"`
 }
+
+func (s Post) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 
 func (c Post) GetID() string {
 	return fmt.Sprintf("%d", c.ID)
@@ -289,6 +310,14 @@ type Question struct {
 	InspiringQuestionID sql.NullString `json:"-"`
 	InspiringQuestion   *Question      `json:"-"`
 }
+
+func (s Question) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
+
 
 func (q Question) GetID() string {
 	return q.ID
@@ -549,6 +578,12 @@ func (a Article) GetReferencedIDs() []ReferenceID {
 type DeepDedendencies struct {
 	ID            string             `json:"-"`
 	Relationships []DeepDedendencies `json:"-"`
+}
+
+func (s DeepDedendencies) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
 }
 
 func (d DeepDedendencies) GetID() string {

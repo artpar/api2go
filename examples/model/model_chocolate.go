@@ -7,6 +7,13 @@ type Chocolate struct {
 	Taste string `json:"taste"`
 }
 
+
+func (s Chocolate) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 // GetID to satisfy jsonapi.MarshalIdentifier interface
 func (c Chocolate) GetID() string {
 	return c.ID

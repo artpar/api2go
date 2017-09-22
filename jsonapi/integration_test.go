@@ -3,8 +3,6 @@ package jsonapi
 import (
 	"errors"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 type Book struct {
@@ -99,6 +97,13 @@ type StupidUser struct {
 	Name string `json:"name"`
 }
 
+
+func (s StupidUser) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 func (s StupidUser) GetID() string {
 	return s.ID
 }
@@ -107,6 +112,13 @@ type Page struct {
 	ID      string `json:"-"`
 	Content string `json:"content"`
 }
+
+func (s Page) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 
 func (p Page) GetID() string {
 	return p.ID

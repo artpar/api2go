@@ -5,8 +5,6 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 type BaguetteTaste struct {
@@ -17,6 +15,13 @@ type BaguetteTaste struct {
 func (s BaguetteTaste) GetID() string {
 	return s.ID
 }
+
+func (s BaguetteTaste) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 
 func (s *BaguetteTaste) SetID(ID string) error {
 	s.ID = ID

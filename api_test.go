@@ -12,8 +12,6 @@ import (
 
 	"github.com/artpar/api2go/jsonapi"
 	"github.com/artpar/api2go/routing"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"gopkg.in/guregu/null.v2"
 )
 
@@ -35,6 +33,13 @@ func (m *requestURLResolver) SetRequest(r http.Request) {
 
 type invalid string
 
+
+func (s invalid) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 func (i invalid) GetID() string {
 	return "invalid"
 }
@@ -46,6 +51,13 @@ type Post struct {
 	Author   *User      `json:"-"`
 	Comments []Comment  `json:"-"`
 	Bananas  []Banana   `json:"-"`
+}
+
+
+func (s Post) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
 }
 
 func (p Post) GetID() string {
@@ -188,6 +200,13 @@ type Comment struct {
 	Value string `json:"value"`
 }
 
+
+func (s Comment) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
 func (c Comment) GetID() string {
 	return c.ID
 }
@@ -195,6 +214,13 @@ func (c Comment) GetID() string {
 type Banana struct {
 	ID   string `jnson:"-"`
 	Name string
+}
+
+
+func (s Banana) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
 }
 
 func (b Banana) GetID() string {
@@ -205,6 +231,13 @@ type User struct {
 	ID   string `json:"-"`
 	Name string `json:"name"`
 	Info string `json:"info"`
+}
+
+
+func (s User) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
 }
 
 func (u User) GetID() string {

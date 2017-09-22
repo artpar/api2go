@@ -18,6 +18,13 @@ type SomeData struct {
 	CustomerID string `json:"customerId"`
 }
 
+func (s SomeData) GetAttributes() map[string]interface{} {
+	return map[string]interface{}{
+		"ID": "",
+	}
+}
+
+
 func (s SomeData) GetID() string {
 	return s.ID
 }
