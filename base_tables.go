@@ -542,6 +542,7 @@ func (m *Api2GoModel) GetAllAsAttributes() map[string]interface{} {
 	for k, v := range m.Data {
 		attrs[k] = v
 	}
+	attrs["__type"] = m.GetTableName()
 
 	return attrs
 }
@@ -626,20 +627,39 @@ func (g *Api2GoModel) GetAuditModel() *Api2GoModel {
 
 	newData := make(map[string]interface{})
 
-	for k, v := range g.oldData {
+	if g.IsDirty() {
+		for k, v := range g.oldData {
 
-		if k == "reference_id" {
-			continue
+			if k == "reference_id" {
+				continue
+			}
+
+			if k == "id" {
+				continue
+			}
+
+			newData[k] = v
 		}
+		newData["audit_object_id"] = g.oldData["reference_id"]
 
-		if k == "id" {
-			continue
+	} else {
+		for k, v := range g.Data {
+
+			if k == "reference_id" {
+				continue
+			}
+
+			if k == "id" {
+				continue
+			}
+
+			newData[k] = v
 		}
+		newData["audit_object_id"] = g.Data["reference_id"]
 
-		newData[k] = v
 	}
+
 	newData["__type"] = auditTableName
-	newData["audit_object_id"] = g.oldData["reference_id"]
 
 	return NewApi2GoModelWithData(auditTableName, g.columns, g.defaultPermission, nil, newData)
 
