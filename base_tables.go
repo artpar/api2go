@@ -121,11 +121,17 @@ type Api2GoModel struct {
 	columns           []ColumnInfo
 	columnMap         map[string]ColumnInfo
 	defaultPermission int64
+	DeleteIncludes    map[string][]string
 	relations         []TableRelation
 	Data              map[string]interface{}
 	oldData           map[string]interface{}
 	Includes          []jsonapi.MarshalIdentifier
 	dirty             bool
+}
+
+type DeleteReferenceInfo struct {
+	ReferenceRelationName string
+	ReferenceId           string
 }
 
 func (g *Api2GoModel) GetNextVersion() int64 {
@@ -254,7 +260,13 @@ func (f ForeignKeyData) String() string {
 	return fmt.Sprintf("%s(%s)", f.TableName, f.ColumnName)
 }
 
-func NewApi2GoModelWithData(name string, columns []ColumnInfo, defaultPermission int64, relations []TableRelation, m map[string]interface{}) *Api2GoModel {
+func NewApi2GoModelWithData(
+		name string,
+		columns []ColumnInfo,
+		defaultPermission int64,
+		relations []TableRelation,
+		m map[string]interface{},
+) *Api2GoModel {
 	if m != nil {
 		m["__type"] = name
 	}
@@ -331,6 +343,115 @@ func (m *Api2GoModel) SetToOneReferenceID(name, ID string) error {
 	return errors.New("There is no to-one relationship with the name " + name)
 }
 
+// The EditToManyRelations interface can be optionally implemented to add and
+// delete to-many relationships on a already unmarshalled struct. These methods
+// are used by our API for the to-many relationship update routes.
+//
+// There are 3 HTTP Methods to edit to-many relations:
+//
+//	PATCH /v1/posts/1/comments
+//	Content-Type: application/vnd.api+json
+//	Accept: application/vnd.api+json
+//
+//	{
+//	  "data": [
+//		{ "type": "comments", "id": "2" },
+//		{ "type": "comments", "id": "3" }
+//	  ]
+//	}
+//
+// This replaces all of the comments that belong to post with ID 1 and the
+// SetToManyReferenceIDs method will be called.
+//
+//	POST /v1/posts/1/comments
+//	Content-Type: application/vnd.api+json
+//	Accept: application/vnd.api+json
+//
+//	{
+//	  "data": [
+//		{ "type": "comments", "id": "123" }
+//	  ]
+//	}
+//
+// Adds a new comment to the post with ID 1.
+// The AddToManyIDs method will be called.
+//
+//	DELETE /v1/posts/1/comments
+//	Content-Type: application/vnd.api+json
+//	Accept: application/vnd.api+json
+//
+//	{
+//	  "data": [
+//		{ "type": "comments", "id": "12" },
+//		{ "type": "comments", "id": "13" }
+//	  ]
+//	}
+//
+// Deletes comments that belong to post with ID 1.
+// The DeleteToManyIDs method will be called.
+type EditToManyRelations interface {
+	AddToManyIDs(name string, IDs []string) error
+	DeleteToManyIDs(name string, IDs []string) error
+}
+
+func (m *Api2GoModel) AddToManyIDs(name string, IDs []string) error {
+
+	new1 := errors.New("There is no to-manyrelationship with the name " + name)
+	log.Errorf("ERROR: ", new1)
+	return new1
+}
+
+func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
+
+	referencedRelation := TableRelation{}
+
+	for _, relation := range m.relations {
+
+		if relation.GetSubject() == m.typeName && relation.GetObjectName() == name {
+			referencedRelation = relation
+			break
+		} else if relation.GetObject() == m.typeName && relation.GetSubjectName() == name {
+			referencedRelation = relation
+			break
+		}
+	}
+
+	if referencedRelation.GetRelation() == "" {
+		return fmt.Errorf("Relationship not found: %v", name)
+	}
+
+	//otherType := referencedRelation.GetObject()
+	//otherTypeName := referencedRelation.GetObjectName()
+	//if referencedRelation.GetObject() == m.typeName {
+	//	otherType = referencedRelation.GetSubject()
+	//	otherTypeName = referencedRelation.GetSubjectName()
+	//}
+	//
+	//jsonApiRelationType := jsonapi.ToOneRelationship
+	//if referencedRelation.GetRelation() == "has_many" {
+	//	jsonApiRelationType = jsonapi.ToManyRelationship
+	//}
+
+	if referencedRelation.GetRelation() == "has_one" || referencedRelation.GetRelation() == "belongs_to" {
+		if m.Data[name] == IDs[0] {
+			//m.Data[name] = nil
+			m.SetAttributes(map[string]interface{}{
+				name: nil,
+			})
+		}
+	} else {
+		if m.DeleteIncludes == nil {
+			m.DeleteIncludes = make(map[string][]string)
+		}
+
+		references := m.DeleteIncludes
+		references[name] = IDs
+		m.DeleteIncludes = references
+	}
+
+	return nil
+}
+
 func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 
 	for _, rel := range m.relations {
@@ -375,19 +496,6 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 
 	return nil
 
-}
-
-func (m *Api2GoModel) AddToManyIDs(name string, IDs []string) error {
-
-	new1 := errors.New("There is no to-manyrelationship with the name " + name)
-	log.Errorf("ERROR: ", new1)
-	return new1
-}
-
-func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
-	new1 := errors.New("There is no to-manyrelationship with the name " + name)
-	log.Errorf("ERROR: ", new1)
-	return new1
 }
 
 func (m *Api2GoModel) GetReferencedStructs() []jsonapi.MarshalIdentifier {
