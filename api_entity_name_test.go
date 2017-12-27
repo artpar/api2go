@@ -81,7 +81,7 @@ var _ = Describe("Test route renaming with EntityNamer interface", func() {
 		body *strings.Reader
 	)
 	BeforeEach(func() {
-		api = NewAPI("v1")
+		api = NewAPIWithRouting(testPrefix, NewStaticResolver(""), newTestRouter())
 		api.AddResource(BaguetteTaste{}, BaguetteResource{})
 		rec = httptest.NewRecorder()
 		body = strings.NewReader(`

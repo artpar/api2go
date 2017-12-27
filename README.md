@@ -1,7 +1,7 @@
 # api2go
 
 [![Join the chat at https://gitter.im/manyminds/api2go](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/manyminds/api2go?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![GoDoc](https://godoc.org/github.com/artpar/api2go?status.svg)](https://godoc.org/github.com/artpar/api2go)
+[![GoDoc](https://godoc.org/github.com/manyminds/api2go?status.svg)](https://godoc.org/github.com/manyminds/api2go)
 [![Build Status](https://travis-ci.org/manyminds/api2go.svg?branch=master)](https://travis-ci.org/manyminds/api2go)
 [![Coverage Status](https://coveralls.io/repos/github/manyminds/api2go/badge.svg?branch=master)](https://coveralls.io/github/manyminds/api2go?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/manyminds/api2go)](https://goreportcard.com/report/manyminds/api2go)
@@ -35,12 +35,12 @@ A [JSON API](http://jsonapi.org) Implementation for Go, to be used e.g. as serve
 
 For the complete api2go package use:
 ```go
-go get github.com/artpar/api2go
+go get github.com/manyminds/api2go
 ```
 
 If you only need marshalling and/or unmarshalling:
 ```
-go get github.com/artpar/api2go/jsonapi 
+go get github.com/manyminds/api2go/jsonapi 
 ```
 
 ## Basic functionality
@@ -93,7 +93,7 @@ All the additional information is retrieved by implementing some interfaces.
 
 ## Examples
 
-- Basic Examples can be found [here](https://github.com/artpar/api2go/blob/master/examples/crud_example.go).
+- Basic Examples can be found [here](https://github.com/manyminds/api2go/blob/master/examples/crud_example.go).
 - For a more real life example implementation of api2go using [jinzhu/gorm](https://github.com/jinzhu/gorm) and [gin-gonic/gin](https://github.com/gin-gonic/gin) you can have a look at hnakamur's [repository](https://github.com/hnakamur/api2go-gorm-gin-crud-example)
 
 ## Interfaces to implement
@@ -244,7 +244,7 @@ type UnmarshalToManyRelations interface {
 ## Manual marshalling / unmarshalling
 Please keep in mind that this only works if you implemented the previously mentioned interfaces. Manual marshalling and
 unmarshalling makes sense, if you do not want to use our API that automatically generates all the necessary routes for you. You
-can directly use our sub-package `github.com/artpar/api2go/jsonapi` 
+can directly use our sub-package `github.com/manyminds/api2go/jsonapi` 
 
 ```go
 comment1 = Comment{ID: 1, Text: "First!"}
@@ -333,17 +333,19 @@ In order to use omitempty with those types, you need to specify them as pointers
 If you want to use api2go with [gin](https://github.com/gin-gonic/gin) you need to use a different router than the default one.
 Get the according adapter using:
 
-```go get github.com/artpar/api2go-adapter/gingonic```
+```go get -tags=gingonic github.com/manyminds/api2go```
+
+Currently the supported tags are: `gingonic`,`gorillamux`, or `echo`.
 
 After that you can bootstrap api2go the following way:
 ```go
   import (
     "github.com/gin-gonic/gin"
-    "github.com/artpar/api2go"
-    "github.com/artpar/api2go-adapter/gingonic"
-    "github.com/artpar/api2go/examples/model"
-    "github.com/artpar/api2go/examples/resource"
-    "github.com/artpar/api2go/examples/storage"
+    "github.com/manyminds/api2go"
+    "github.com/manyminds/api2go/routing"
+    "github.com/manyminds/api2go/examples/model"
+    "github.com/manyminds/api2go/examples/resource"
+    "github.com/manyminds/api2go/examples/storage"
   )
 
   func main() {
@@ -351,7 +353,7 @@ After that you can bootstrap api2go the following way:
     api := api2go.NewAPIWithRouting(
       "api",
       api2go.NewStaticResolver("/"),
-      gingonic.New(r),
+      routing.Gin(r),
     )
 
     userStorage := storage.NewUserStorage()
