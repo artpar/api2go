@@ -208,6 +208,12 @@ func (a *Api2GoModel) GetRelations() []TableRelation {
 	return a.relations
 }
 
+type ValueOptions struct {
+	ValueType string
+	Value     interface{}
+	Label     string
+}
+
 type ColumnInfo struct {
 	Name              string         `db:"name"`
 	ColumnName        string         `db:"column_name"`
@@ -224,12 +230,13 @@ type ColumnInfo struct {
 	ForeignKeyData    ForeignKeyData `db:"foreign_key_data"`
 	DataType          string         `db:"data_type"`
 	DefaultValue      string         `db:"default_value"`
+	Options           []ValueOptions
 }
 
 type ForeignKeyData struct {
 	DataSource string
-	TableName  string
-	ColumnName string
+	Namespace  string
+	KeyName    string
 }
 
 func (f *ForeignKeyData) Scan(src interface{}) error {
@@ -250,22 +257,22 @@ func (f *ForeignKeyData) Scan(src interface{}) error {
 		tableName = tableName[indexColon+1:]
 	}
 
-	f.TableName = tableName
-	f.ColumnName = columnName
-	f.ColumnName = dataSource
+	f.Namespace = tableName
+	f.KeyName = columnName
+	f.KeyName = dataSource
 	return nil
 }
 
 func (f ForeignKeyData) String() string {
-	return fmt.Sprintf("%s(%s)", f.TableName, f.ColumnName)
+	return fmt.Sprintf("%s(%s)", f.Namespace, f.KeyName)
 }
 
 func NewApi2GoModelWithData(
-		name string,
-		columns []ColumnInfo,
-		defaultPermission int64,
-		relations []TableRelation,
-		m map[string]interface{},
+	name string,
+	columns []ColumnInfo,
+	defaultPermission int64,
+	relations []TableRelation,
+	m map[string]interface{},
 ) *Api2GoModel {
 	if m != nil {
 		m["__type"] = name
@@ -402,7 +409,7 @@ func (m *Api2GoModel) AddToManyIDs(name string, IDs []string) error {
 }
 
 func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
-
+	log.Infof("set DeleteToManyIDs [%v] == %v", name, IDs)
 	referencedRelation := TableRelation{}
 
 	for _, relation := range m.relations {
@@ -417,7 +424,7 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 	}
 
 	if referencedRelation.GetRelation() == "" {
-		return fmt.Errorf("Relationship not found: %v", name)
+		return fmt.Errorf("relationship not found: %v", name)
 	}
 
 	//otherType := referencedRelation.GetObject()
@@ -432,23 +439,29 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 	//	jsonApiRelationType = jsonapi.ToManyRelationship
 	//}
 
-	if referencedRelation.GetRelation() == "has_one" || referencedRelation.GetRelation() == "belongs_to" {
-		if m.Data[name] == IDs[0] {
-			//m.Data[name] = nil
-			m.SetAttributes(map[string]interface{}{
-				name: nil,
-			})
-		}
-	} else {
-		if m.DeleteIncludes == nil {
-			m.DeleteIncludes = make(map[string][]string)
-		}
+	if m.typeName == referencedRelation.GetSubject() {
 
-		references := m.DeleteIncludes
-		references[name] = IDs
-		m.DeleteIncludes = references
 	}
 
+	//if referencedRelation.GetRelation() == "has_one" || referencedRelation.GetRelation() == "belongs_to" {
+	//	log.Infof("Has one or belongs to relation")
+	//	if m.Data[name] == IDs[0] {
+	//		//m.Data[name] = nil
+	//		m.SetAttributes(map[string]interface{}{
+	//			name: nil,
+	//		})
+	//	}
+	//} else {
+	log.Infof("Many to many relation to relation")
+	if m.DeleteIncludes == nil {
+		m.DeleteIncludes = make(map[string][]string)
+	}
+
+	references := m.DeleteIncludes
+	references[name] = IDs
+	m.DeleteIncludes = references
+	//}
+	log.Infof("New to deletes: %v", m.DeleteIncludes)
 	return nil
 }
 
@@ -627,9 +640,9 @@ func (m *Api2GoModel) GetAttributes() map[string]interface{} {
 	//log.Infof("Column Map for [%v]: %v", colMap["reference_id"])
 	for k, v := range m.Data {
 
-		if colMap[k].IsForeignKey {
-			continue
-		}
+		//if colMap[k].IsForeignKey {
+		//	continue
+		//}
 
 		if colMap[k].ExcludeFromApi {
 			continue
@@ -736,41 +749,33 @@ func (g *Api2GoModel) GetAuditModel() *Api2GoModel {
 	newData := make(map[string]interface{})
 
 	if g.IsDirty() {
-		for k, v := range g.oldData {
-
-			if k == "reference_id" {
-				continue
-			}
-
-			if k == "id" {
-				continue
-			}
-
-			newData[k] = v
-		}
-		newData["audit_object_id"] = g.oldData["reference_id"]
-
+		newData = copyMapWithSkipKeys(g.oldData, []string{"reference_id", "id"})
+		//newData["audit_object_id"] = g.oldData["reference_id"]
 	} else {
-		for k, v := range g.Data {
-
-			if k == "reference_id" {
-				continue
-			}
-
-			if k == "id" {
-				continue
-			}
-
-			newData[k] = v
-		}
-		newData["audit_object_id"] = g.Data["reference_id"]
-
+		newData = copyMapWithSkipKeys(g.Data, []string{"reference_id", "id"})
+		//newData["audit_object_id"] = g.Data["reference_id"]
 	}
 
 	newData["__type"] = auditTableName
 
 	return NewApi2GoModelWithData(auditTableName, g.columns, g.defaultPermission, nil, newData)
 
+}
+func copyMapWithSkipKeys(dataMap map[string]interface{}, skipKeys []string) (map[string]interface{}) {
+	newData := make(map[string]interface{})
+
+	skipMap := make(map[string]bool)
+	for _, k := range skipKeys {
+		skipMap[k] = true
+	}
+
+	for k, v := range dataMap {
+		if skipMap[k] {
+			continue
+		}
+		newData[k] = v
+	}
+	return newData
 }
 
 func (g *Api2GoModel) GetChanges() map[string]Change {
