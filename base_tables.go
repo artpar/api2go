@@ -824,6 +824,7 @@ func (g *Api2GoModel) GetReferenceId() string {
 }
 
 func (g *Api2GoModel) BeforeCreate() (err error) {
-	g.Data["reference_id"] = uuid.NewV4().String()
+    u, _ := uuid.NewV4()
+	g.Data["reference_id"] = u.String()
 	return nil
 }
