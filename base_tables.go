@@ -5,7 +5,7 @@ import (
 	"fmt"
 	underscore "github.com/ahl5esoft/golang-underscore"
 	"github.com/artpar/api2go/jsonapi"
-	"github.com/satori/go.uuid"
+	"github.com/artpar/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
