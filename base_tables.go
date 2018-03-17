@@ -3,7 +3,7 @@ package api2go
 import (
 	"errors"
 	"fmt"
-	underscore "github.com/ahl5esoft/golang-underscore"
+	"github.com/ahl5esoft/golang-underscore"
 	"github.com/artpar/api2go/jsonapi"
 	"github.com/artpar/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -331,6 +331,9 @@ func EndsWithCheck(str string, endsWith string) bool {
 
 func (m *Api2GoModel) SetToOneReferenceID(name, ID string) error {
 
+	if ID == "" {
+		return errors.New("referenced id cannot be set to to empty, use delete to remove")
+	}
 	existingVal, ok := m.Data[name]
 	if !m.dirty && (!ok || existingVal != ID) {
 		m.dirty = true
@@ -483,7 +486,9 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 					}
 					rows = append(rows, row)
 				}
-				m.Data[name] = rows
+				if len(rows) > 0 {
+					m.Data[name] = rows
+				}
 				return nil
 			}
 		} else if rel.GetRelation() == "has_one" {
@@ -502,7 +507,9 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 				rows = append(rows, row)
 			}
 			//m.SetToOneReferenceID(name, IDs[0])
-			m.Data[name] = rows
+			if len(rows) > 0 {
+				m.Data[name] = rows
+			}
 			return nil
 		}
 	}
@@ -722,8 +729,8 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	for k, v := range attrs {
 
 		existingValue, ok := g.Data[k]
-		if !g.dirty {
-			if !ok || v != existingValue {
+		if !ok || v != existingValue {
+			if !g.dirty {
 				g.dirty = true
 				tempMap := make(map[string]interface{})
 
@@ -733,9 +740,11 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 
 				g.oldData = tempMap
 			}
+			break
 		}
-		g.Data[k] = v
 	}
+	//log.Printf("Set [%v] = [%v]", k, v)
+	g.Data = attrs
 }
 
 type Change struct {
@@ -761,7 +770,7 @@ func (g *Api2GoModel) GetAuditModel() *Api2GoModel {
 	return NewApi2GoModelWithData(auditTableName, g.columns, g.defaultPermission, nil, newData)
 
 }
-func copyMapWithSkipKeys(dataMap map[string]interface{}, skipKeys []string) (map[string]interface{}) {
+func copyMapWithSkipKeys(dataMap map[string]interface{}, skipKeys []string) map[string]interface{} {
 	newData := make(map[string]interface{})
 
 	skipMap := make(map[string]bool)
@@ -824,7 +833,7 @@ func (g *Api2GoModel) GetReferenceId() string {
 }
 
 func (g *Api2GoModel) BeforeCreate() (err error) {
-    u, _ := uuid.NewV4()
+	u, _ := uuid.NewV4()
 	g.Data["reference_id"] = u.String()
 	return nil
 }
