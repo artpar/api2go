@@ -106,8 +106,8 @@ func NewTableRelation(subject, relation, object string) TableRelation {
 	}
 }
 
-func NewTableRelationWithNames(subject, subjectName, relation, object, objectName string) *TableRelation {
-	return &TableRelation{
+func NewTableRelationWithNames(subject, subjectName, relation, object, objectName string) TableRelation {
+	return TableRelation{
 		Subject:     subject,
 		Relation:    relation,
 		Object:      object,
