@@ -82,3 +82,8 @@ func (e HTTPError) Error() string {
 
 	return msg
 }
+
+// Error returns a nice string represenation including the status
+func (e HTTPError) Status() int {
+	return e.status
+}
