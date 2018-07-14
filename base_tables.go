@@ -239,6 +239,7 @@ type ForeignKeyData struct {
 	KeyName    string
 }
 
+// Parse format "dataSource:tableName(column)"
 func (f *ForeignKeyData) Scan(src interface{}) error {
 	strValue, ok := src.([]uint8)
 	if !ok {
@@ -249,17 +250,17 @@ func (f *ForeignKeyData) Scan(src interface{}) error {
 	tableName := parts[0]
 	columnName := strings.Split(parts[1], ")")[0]
 
-	dataSource := "self"
+	datasource := "self"
 
 	indexColon := strings.Index(tableName, ":")
 	if indexColon > -1 {
-		dataSource = tableName[0:indexColon]
+		datasource = tableName[0:indexColon]
 		tableName = tableName[indexColon+1:]
 	}
 
-	f.Namespace = tableName
+	f.DataSource = datasource
 	f.KeyName = columnName
-	f.KeyName = dataSource
+	f.Namespace = tableName
 	return nil
 }
 
