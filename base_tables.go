@@ -239,7 +239,7 @@ type ForeignKeyData struct {
 	KeyName    string
 }
 
-// Parse format "dataSource:tableName(column)"
+// Parse format "namespace:tableName(column)"
 func (f *ForeignKeyData) Scan(src interface{}) error {
 	strValue, ok := src.([]uint8)
 	if !ok {
@@ -250,15 +250,15 @@ func (f *ForeignKeyData) Scan(src interface{}) error {
 	tableName := parts[0]
 	columnName := strings.Split(parts[1], ")")[0]
 
-	datasource := "self"
+	dataSource := "self"
 
 	indexColon := strings.Index(tableName, ":")
 	if indexColon > -1 {
-		datasource = tableName[0:indexColon]
+		dataSource = tableName[0:indexColon]
 		tableName = tableName[indexColon+1:]
 	}
 
-	f.DataSource = datasource
+	f.DataSource = dataSource
 	f.KeyName = columnName
 	f.Namespace = tableName
 	return nil
@@ -431,40 +431,26 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 		return fmt.Errorf("relationship not found: %v", name)
 	}
 
-	//otherType := referencedRelation.GetObject()
-	//otherTypeName := referencedRelation.GetObjectName()
-	//if referencedRelation.GetObject() == m.typeName {
-	//	otherType = referencedRelation.GetSubject()
-	//	otherTypeName = referencedRelation.GetSubjectName()
-	//}
-	//
-	//jsonApiRelationType := jsonapi.ToOneRelationship
-	//if referencedRelation.GetRelation() == "has_many" {
-	//	jsonApiRelationType = jsonapi.ToManyRelationship
-	//}
+	if (referencedRelation.GetRelation() == "has_one" ||
+		referencedRelation.GetRelation() == "belongs_to") &&
+		m.typeName == referencedRelation.GetSubject() {
+		log.Infof("Has one or belongs to relation")
+		if m.Data[name] == IDs[0] {
+			//m.Data[name] = nil
+			m.SetAttributes(map[string]interface{}{
+				name: nil,
+			})
+		}
+	} else {
+		log.Infof("Many to many relation to relation")
+		if m.DeleteIncludes == nil {
+			m.DeleteIncludes = make(map[string][]string)
+		}
 
-	if m.typeName == referencedRelation.GetSubject() {
-
+		references := m.DeleteIncludes
+		references[name] = IDs
+		m.DeleteIncludes = references
 	}
-
-	//if referencedRelation.GetRelation() == "has_one" || referencedRelation.GetRelation() == "belongs_to" {
-	//	log.Infof("Has one or belongs to relation")
-	//	if m.Data[name] == IDs[0] {
-	//		//m.Data[name] = nil
-	//		m.SetAttributes(map[string]interface{}{
-	//			name: nil,
-	//		})
-	//	}
-	//} else {
-	log.Infof("Many to many relation to relation")
-	if m.DeleteIncludes == nil {
-		m.DeleteIncludes = make(map[string][]string)
-	}
-
-	references := m.DeleteIncludes
-	references[name] = IDs
-	m.DeleteIncludes = references
-	//}
 	log.Infof("New to deletes: %v", m.DeleteIncludes)
 	return nil
 }
@@ -551,25 +537,8 @@ func (m *Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 		}
 
 	}
-	//
-	//for _, col := range *m.columns {
-	//
-	//  if col.ColumnName == "reference_id" {
-	//    continue
-	//  }
-	//
-	//  pref, ok := EndsWith(col.ColumnName, "_id")
-	//  log.Infof("Checked column [%v]: %v == %v", col.ColumnName, ok, pref)
-	//  if ok {
-	//    ref := jsonapi.ReferenceID{
-	//      Type: pref,
-	//      Name: pref,
-	//      ID: m.Data[col.ColumnName].(string),
-	//      Relationship: jsonapi.DefaultRelationship,
-	//    }
-	//    references = append(references, ref)
-	//  }
-	//}
+
+
 	//log.Infof("Reference ids for %v: %v", m.typeName, references)
 	return references
 
@@ -722,7 +691,7 @@ func (g *Api2GoModel) GetID() string {
 }
 
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
-	log.Infof("set attributes: %v", attrs)
+	//log.Infof("set attributes: %v", attrs)
 	if g.Data == nil {
 		g.Data = attrs
 		return
