@@ -50,12 +50,17 @@ func (tr *TableRelation) GetJoinTableName() string {
 func (tr *TableRelation) GetJoinString() string {
 
 	if tr.Relation == "has_one" {
-		return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+		return fmt.Sprintf(" %s %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetObjectName(), tr.GetSubject(), tr.GetObjectName(), tr.GetObjectName(), "id")
 	} else if tr.Relation == "belongs_to" {
-		return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+		return fmt.Sprintf(" %s %s on %s.%s = %s.%s ", tr.GetObject(), tr.GetObjectName(), tr.GetSubject(), tr.GetObjectName(), tr.GetObjectName(), "id")
 	} else if tr.Relation == "has_many" || tr.Relation == "has_many_and_belongs_to_many" {
-		return fmt.Sprintf(" %s j1 on      j1.%s = %s.id             join %s  on  j1.%s = %s.%s ",
-			tr.GetJoinTableName(), tr.SubjectName, tr.GetSubject(), tr.GetObject(), tr.GetObjectName(), tr.GetObject(), "id")
+		return fmt.Sprintf(" %s %s on      %s.%s = %s.id             join %s %s  on  %s.%s = %s.%s ",
+			tr.GetJoinTableName(), tr.GetJoinTableName(),
+			tr.GetJoinTableName(), tr.GetSubjectName(),
+			tr.GetSubject(),
+			tr.GetObject(), tr.GetObjectName(),
+			tr.GetJoinTableName(), tr.GetObjectName(),
+			tr.GetObjectName(), "id")
 	} else {
 		log.Errorf("Not implemented join: %v", tr)
 	}
@@ -66,14 +71,19 @@ func (tr *TableRelation) GetJoinString() string {
 func (tr *TableRelation) GetReverseJoinString() string {
 
 	if tr.Relation == "has_one" {
-		return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+		return fmt.Sprintf(" %s %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubjectName(), tr.GetSubjectName(), tr.GetObjectName(), tr.GetObject(), "id")
 	} else if tr.Relation == "belongs_to" {
-		return fmt.Sprintf(" %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubject(), tr.GetObjectName(), tr.GetObject(), "id")
+		return fmt.Sprintf(" %s %s on %s.%s = %s.%s ", tr.GetSubject(), tr.GetSubjectName(), tr.GetSubjectName(), tr.GetObjectName(), tr.GetObject(), "id")
 	} else if tr.Relation == "has_many" {
 
 		//select * from user join user_has_usergroup j1 on j1.user_id = user.id  join usergroup on j1.usergroup_id = usergroup.id
-		return fmt.Sprintf(" %s j1 on j1.%s = %s.id join %s on j1.%s = %s.%s ",
-			tr.GetJoinTableName(), tr.GetObjectName(), tr.GetObject(), tr.GetSubject(), tr.GetSubjectName(), tr.GetSubject(), "id")
+		return fmt.Sprintf(" %s %s on %s.%s = %s.id join %s %s on %s.%s = %s.%s ",
+			tr.GetJoinTableName(), tr.GetJoinTableName(),
+			tr.GetJoinTableName(), tr.GetObjectName(),
+			tr.GetObject(),
+			tr.GetSubject(), tr.GetSubjectName(),
+			tr.GetJoinTableName(), tr.GetSubjectName(),
+			tr.GetSubjectName(), "id")
 	} else {
 		log.Errorf("Not implemented join: %v", tr)
 	}
@@ -537,7 +547,6 @@ func (m *Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 		}
 
 	}
-
 
 	//log.Infof("Reference ids for %v: %v", m.typeName, references)
 	return references
