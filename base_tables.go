@@ -3,7 +3,6 @@ package api2go
 import (
 	"errors"
 	"fmt"
-	"github.com/ahl5esoft/golang-underscore"
 	"github.com/artpar/api2go/jsonapi"
 	"github.com/artpar/go.uuid"
 	log "github.com/sirupsen/logrus"
@@ -22,6 +21,7 @@ type TableRelation struct {
 	Relation    string
 	SubjectName string
 	ObjectName  string
+	Columns     []ColumnInfo
 }
 
 func (tr *TableRelation) String() string {
@@ -670,13 +670,12 @@ func (m *Api2GoModel) GetColumns() []ColumnInfo {
 
 func (m *Api2GoModel) GetColumnNames() []string {
 
-	v := underscore.Map(m.columns, func(s ColumnInfo, _ int) string {
-		//log.Infof("Columna name for [%v] == %v]", s.Name, s.ColumnName)
-		return s.ColumnName
-	})
-	res, _ := v.([]string)
+	colNames := make([]string, 0)
+	for _, col := range m.columns {
+		colNames = append(colNames, col.ColumnName)
+	}
 
-	return res
+	return colNames
 }
 
 func (g Api2GoModel) GetDefaultPermission() int64 {
