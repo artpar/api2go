@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/manyminds/api2go/routing"
+	"github.com/artpar/api2go/routing"
 )
 
 func newTestRouter() routing.Routeable {
