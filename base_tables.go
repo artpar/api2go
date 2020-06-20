@@ -156,7 +156,12 @@ func (g *Api2GoModel) GetNextVersion() int64 {
 }
 
 func (g *Api2GoModel) HasVersion() bool {
-	_, ok := g.Data["version"]
+	ok := false
+	if !g.dirty {
+		_, ok = g.Data["version"]
+	} else {
+		_, ok = g.oldData["version"]
+	}
 	return ok
 }
 
