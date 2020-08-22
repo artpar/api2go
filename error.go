@@ -1,7 +1,6 @@
 package api2go
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
