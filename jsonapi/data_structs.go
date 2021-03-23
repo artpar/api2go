@@ -2,7 +2,7 @@ package jsonapi
 
 import (
 	"bytes"
-	"encoding/json"
+	json1 "encoding/json"
 	"errors"
 )
 
@@ -117,7 +117,7 @@ type Meta map[string]interface{}
 type Data struct {
 	Type          string                  `json:"type"`
 	ID            string                  `json:"id"`
-	Attributes    json.RawMessage         `json:"attributes"`
+	Attributes    json1.RawMessage         `json:"attributes"`
 	Relationships map[string]Relationship `json:"relationships,omitempty"`
 	Links         Links                   `json:"links,omitempty"`
 }

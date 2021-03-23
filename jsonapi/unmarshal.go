@@ -1,7 +1,6 @@
 package jsonapi
 
 import (
-  "encoding/json"
   "errors"
   "fmt"
   "reflect"
