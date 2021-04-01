@@ -800,7 +800,7 @@ func (g *Api2GoModel) GetUnmodifiedAttributes() map[string]interface{} {
 }
 
 func (g *Api2GoModel) SetID(str string) error {
-	log.Infof("set id: %v", str)
+	//log.Infof("set id: %v", str)
 	if g.Data == nil {
 		g.Data = make(map[string]interface{})
 	}
