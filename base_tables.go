@@ -470,7 +470,7 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 	return nil
 }
 
-func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
+func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interface{}) error {
 
 	for _, rel := range m.relations {
 		//log.Infof("Check relation: %v", rel.String())
