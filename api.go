@@ -1224,14 +1224,12 @@ func processRelationshipsData(data interface{}, linkName string, target interfac
 			if !ok {
 				return fmt.Errorf("entry in data array must be an object for %s", linkName)
 			}
-			dataID, ok := data["id"].(string)
+			_, ok = data["id"].(string)
 			if !ok {
 				return fmt.Errorf("all data objects must have a field id for %s", linkName)
 			}
 
-			hasManyIDs = append(hasManyIDs, map[string]interface{}{
-				"id": dataID,
-			})
+			hasManyIDs = append(hasManyIDs, data)
 		}
 
 		target.SetToManyReferenceIDs(linkName, hasManyIDs)

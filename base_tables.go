@@ -479,14 +479,14 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 
 				var rows = make([]map[string]interface{}, 0)
 				for _, id := range IDs {
-					row := make(map[string]interface{})
-					row[name] = id
+					//row := make(map[string]interface{})
+					//row[name] = id
 					if rel.GetSubjectName() == name {
-						row[rel.GetObjectName()] = m.Data["reference_id"]
+						id[rel.GetObjectName()] = m.Data["reference_id"]
 					} else {
-						row[rel.GetSubjectName()] = m.Data["reference_id"]
+						id[rel.GetSubjectName()] = m.Data["reference_id"]
 					}
-					rows = append(rows, row)
+					rows = append(rows, id)
 				}
 				if len(rows) > 0 {
 					m.Data[name] = rows
@@ -496,16 +496,16 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 
 				var rows = make([]map[string]interface{}, 0)
 				for _, id := range IDs {
-					row := make(map[string]interface{})
-					row[name] = id
+					//row := make(map[string]interface{})
+					//row[name] = id
 					if rel.GetSubjectName() == name {
-						row[rel.GetObjectName()] = m.Data["reference_id"]
-						row["__type"] = rel.GetSubject()
+						id[rel.GetObjectName()] = m.Data["reference_id"]
+						id["__type"] = rel.GetSubject()
 					} else if rel.GetSubjectName() == name {
-						row["__type"] = rel.GetObject()
-						row[rel.GetSubjectName()] = m.Data["reference_id"]
+						id["__type"] = rel.GetObject()
+						id[rel.GetSubjectName()] = m.Data["reference_id"]
 					}
-					rows = append(rows, row)
+					rows = append(rows, id)
 				}
 				//m.SetToOneReferenceID(name, IDs[0])
 				if len(rows) > 0 {
