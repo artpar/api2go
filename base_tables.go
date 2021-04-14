@@ -473,10 +473,10 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 
 	for _, rel := range m.relations {
-		log.Infof("Check relation: %v", rel.String())
-		if rel.GetRelation() == "has_many" || rel.GetRelation() == "has_many_and_belongs_to_many" {
+		//log.Infof("Check relation: %v", rel.String())
+		if rel.GetObjectName() == name || rel.GetSubjectName() == name {
+			if rel.GetRelation() == "has_many" || rel.GetRelation() == "has_many_and_belongs_to_many" {
 
-			if rel.GetObjectName() == name || rel.GetSubjectName() == name {
 				var rows = make([]map[string]interface{}, 0)
 				for _, id := range IDs {
 					row := make(map[string]interface{})
@@ -492,27 +492,27 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []string) error {
 					m.Data[name] = rows
 				}
 				return nil
-			}
-		} else if rel.GetRelation() == "has_one" {
+			} else if rel.GetRelation() == "has_one" {
 
-			var rows = make([]map[string]interface{}, 0)
-			for _, id := range IDs {
-				row := make(map[string]interface{})
-				row[name] = id
-				if rel.GetSubjectName() == name {
-					row[rel.GetObjectName()] = m.Data["reference_id"]
-					row["__type"] = rel.GetSubject()
-				} else {
-					row["__type"] = rel.GetObject()
-					row[rel.GetSubjectName()] = m.Data["reference_id"]
+				var rows = make([]map[string]interface{}, 0)
+				for _, id := range IDs {
+					row := make(map[string]interface{})
+					row[name] = id
+					if rel.GetSubjectName() == name {
+						row[rel.GetObjectName()] = m.Data["reference_id"]
+						row["__type"] = rel.GetSubject()
+					} else if rel.GetSubjectName() == name {
+						row["__type"] = rel.GetObject()
+						row[rel.GetSubjectName()] = m.Data["reference_id"]
+					}
+					rows = append(rows, row)
 				}
-				rows = append(rows, row)
+				//m.SetToOneReferenceID(name, IDs[0])
+				if len(rows) > 0 {
+					m.Data[name] = rows
+				}
+				return nil
 			}
-			//m.SetToOneReferenceID(name, IDs[0])
-			if len(rows) > 0 {
-				m.Data[name] = rows
-			}
-			return nil
 		}
 	}
 

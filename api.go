@@ -1217,7 +1217,7 @@ func processRelationshipsData(data interface{}, linkName string, target interfac
 			return errors.New("target struct must implement interface UnmarshalToManyRelations")
 		}
 
-		hasManyIDs := []string{}
+		hasManyIDs := []map[string]interface{}{}
 
 		for _, entry := range hasMany {
 			data, ok := entry.(map[string]interface{})
@@ -1229,7 +1229,9 @@ func processRelationshipsData(data interface{}, linkName string, target interfac
 				return fmt.Errorf("all data objects must have a field id for %s", linkName)
 			}
 
-			hasManyIDs = append(hasManyIDs, dataID)
+			hasManyIDs = append(hasManyIDs, map[string]interface{}{
+				"id": dataID,
+			})
 		}
 
 		target.SetToManyReferenceIDs(linkName, hasManyIDs)
