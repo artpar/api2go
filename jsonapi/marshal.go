@@ -1,9 +1,9 @@
 package jsonapi
 
 import (
-	jsoniter "github.com/json-iterator/go"
 	"errors"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"reflect"
 	"strings"
 )
@@ -387,17 +387,15 @@ func getLinkBaseURL(element MarshalIdentifier, information ServerInformation) st
 }
 
 func getLinksForServerInformation(relationer MarshalLinkedRelations, name string, information ServerInformation) Links {
-	if information == nil {
-		return nil
-	}
+	return nil
 
-	links := make(Links)
-	base := getLinkBaseURL(relationer, information)
-
-	links["self"] = Link{Href: fmt.Sprintf("%s/relationships/%s", base, name)}
-	links["related"] = Link{Href: fmt.Sprintf("%s/%s", base, name)}
-
-	return links
+	//links := make(Links)
+	//base := getLinkBaseURL(relationer, information)
+	//
+	//links["self"] = Link{Href: fmt.Sprintf("%s/relationships/%s", base, name)}
+	//links["related"] = Link{Href: fmt.Sprintf("%s/%s", base, name)}
+	//
+	//return links
 }
 
 func marshalStruct(data MarshalIdentifier, information ServerInformation) (*Document, error) {
