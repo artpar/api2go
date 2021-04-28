@@ -545,10 +545,63 @@ func (m *Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 				ref := jsonapi.ReferenceID{
 					Type:         rel.GetObject(),
 					Name:         rel.GetObjectName(),
-					ID:           m.Data[rel.GetObjectName()].(string),
+					ID:           val.(string),
 					Relationship: relationType,
 				}
 				references = append(references, ref)
+			} else {
+				val, ok := m.Data[rel.GetSubjectName()]
+				if !ok || val == nil {
+					continue
+				}
+
+				ref := jsonapi.ReferenceID{
+					Type:         rel.GetSubject(),
+					Name:         rel.GetSubjectName(),
+					ID:           val.(string),
+					Relationship: relationType,
+				}
+				references = append(references, ref)
+			}
+
+		} else {
+			relationType = jsonapi.ToManyRelationship
+			if rel.GetSubject() == m.typeName {
+
+				val, ok := m.Data[rel.GetObjectName()]
+				if !ok || val == nil {
+					continue
+				}
+
+				valList := val.([]string)
+				for _, valId := range valList {
+					ref := jsonapi.ReferenceID{
+						Type:         rel.GetObject(),
+						Name:         rel.GetObjectName(),
+						ID:           valId,
+						Relationship: relationType,
+					}
+					references = append(references, ref)
+				}
+
+			} else {
+
+				val, ok := m.Data[rel.GetSubjectName()]
+				if !ok || val == nil {
+					continue
+				}
+
+				valList := val.([]string)
+				for _, valId := range valList {
+					ref := jsonapi.ReferenceID{
+						Type:         rel.GetSubject(),
+						Name:         rel.GetSubjectName(),
+						ID:           valId,
+						Relationship: relationType,
+					}
+					references = append(references, ref)
+				}
+
 			}
 		}
 
