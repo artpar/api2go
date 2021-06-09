@@ -555,6 +555,7 @@ func (m *Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 					continue
 				}
 
+				relationType = jsonapi.ToManyRelationship
 				valueList := val1.([]string)
 
 				for _, val := range valueList {
