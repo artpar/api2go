@@ -133,7 +133,7 @@ type Api2GoModel struct {
 	defaultPermission int64
 	DeleteIncludes    map[string][]string
 	relations         []TableRelation
-	Data              map[string]interface{}
+	Data              map[string]interface{} `json:"data"`
 	oldData           map[string]interface{}
 	Includes          []jsonapi.MarshalIdentifier
 	dirty             bool
