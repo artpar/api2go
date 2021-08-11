@@ -302,9 +302,9 @@ func NewApi2GoModelWithData(
 		dirty:             false,
 	}
 }
-func NewApi2GoModel(name string, columns []ColumnInfo, defaultPermission int64, relations []TableRelation) *Api2GoModel {
+func NewApi2GoModel(name string, columns []ColumnInfo, defaultPermission int64, relations []TableRelation) Api2GoModel {
 	//fmt.Printf("New columns: %v", columns)
-	return &Api2GoModel{
+	return Api2GoModel{
 		typeName:          name,
 		defaultPermission: defaultPermission,
 		relations:         relations,
@@ -795,7 +795,7 @@ type Change struct {
 	NewValue interface{}
 }
 
-func (g *Api2GoModel) GetAuditModel() Api2GoModel {
+func (g Api2GoModel) GetAuditModel() Api2GoModel {
 	auditTableName := g.GetTableName() + "_audit"
 
 	newData := make(map[string]interface{})
