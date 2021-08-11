@@ -133,7 +133,7 @@ type Api2GoModel struct {
 	defaultPermission int64
 	DeleteIncludes    map[string][]string
 	relations         []TableRelation
-	Data              map[string]interface{} `json:"data"`
+	Data              map[string]interface{}
 	oldData           map[string]interface{}
 	Includes          []jsonapi.MarshalIdentifier
 	dirty             bool
@@ -754,6 +754,13 @@ func (g Api2GoModel) GetName() string {
 
 func (g Api2GoModel) GetTableName() string {
 	return g.typeName
+}
+
+func (g Api2GoModel) GetColumnOriginalValue(columnName string) interface{} {
+	if g.IsDirty() {
+		return g.oldData[columnName]
+	}
+	return g.Data[columnName]
 }
 
 func (g Api2GoModel) GetID() string {
