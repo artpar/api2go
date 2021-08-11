@@ -756,7 +756,7 @@ func (g Api2GoModel) GetTableName() string {
 	return g.typeName
 }
 
-func (g *Api2GoModel) GetID() string {
+func (g Api2GoModel) GetID() string {
 	if g.IsDirty() {
 		return fmt.Sprintf("%v", g.oldData["reference_id"])
 	}
