@@ -1,9 +1,10 @@
 package api2go
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"./jsonapi"
 	"errors"
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,11 +14,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/artpar/api2go/jsonapi"
 	"github.com/artpar/api2go/routing"
 )
 
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
+var jsonLib = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
 	codeInvalidQueryFields  = "API2GO_INVALID_FIELD_QUERY_PARAM"
@@ -122,7 +122,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 			size = 1
 		}
 
-		totalPages := (uint64(count) / size)
+		totalPages := uint64(count) / size
 		if (uint64(count) % size) != 0 {
 			// there is one more page with some len(items) < size
 			totalPages++
@@ -485,7 +485,7 @@ func (res *resource) marshalResponse(resp interface{}, w http.ResponseWriter, st
 	if err != nil {
 		return err
 	}
-	result, err := json.Marshal(filtered)
+	result, err := jsonLib.Marshal(filtered)
 	if err != nil {
 		return err
 	}
@@ -787,7 +787,7 @@ func (res *resource) handleReplaceRelation(c APIContexter, w http.ResponseWriter
 	}
 
 	inc := map[string]interface{}{}
-	err = json.Unmarshal(body, &inc)
+	err = jsonLib.Unmarshal(body, &inc)
 	if err != nil {
 		return err
 	}
@@ -841,7 +841,7 @@ func (res *resource) handleAddToManyRelation(c APIContexter, w http.ResponseWrit
 		return err
 	}
 	inc := map[string]interface{}{}
-	err = json.Unmarshal(body, &inc)
+	err = jsonLib.Unmarshal(body, &inc)
 	if err != nil {
 		return err
 	}
@@ -919,7 +919,7 @@ func (res *resource) handleDeleteToManyRelation(c APIContexter, w http.ResponseW
 	}
 
 	inc := map[string]interface{}{}
-	err = json.Unmarshal(body, &inc)
+	err = jsonLib.Unmarshal(body, &inc)
 	if err != nil {
 		return err
 	}
@@ -1154,7 +1154,7 @@ func filterAttributes(attributes map[string]interface{}, fields []string) (filte
 func replaceAttributes(query *map[string][]string, entry *jsonapi.Data) map[string][]string {
 	fieldType := entry.Type
 	attributes := map[string]interface{}{}
-	_ = json.Unmarshal(entry.Attributes, &attributes)
+	_ = jsonLib.Unmarshal(entry.Attributes, &attributes)
 	fields := (*query)[fieldType]
 	if len(fields) > 0 {
 		var wrongFields []string
@@ -1164,7 +1164,7 @@ func replaceAttributes(query *map[string][]string, entry *jsonapi.Data) map[stri
 				fieldType: wrongFields,
 			}
 		}
-		bytes, _ := json.Marshal(attributes)
+		bytes, _ := jsonLib.Marshal(attributes)
 		entry.Attributes = bytes
 	}
 

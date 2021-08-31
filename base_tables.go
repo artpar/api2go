@@ -1,9 +1,10 @@
 package api2go
 
 import (
+	"./jsonapi"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/artpar/api2go/jsonapi"
 	"github.com/artpar/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"strings"
@@ -283,6 +284,47 @@ func (f ForeignKeyData) String() string {
 	return fmt.Sprintf("%s(%s)", f.Namespace, f.KeyName)
 }
 
+// transformNumbersDict walks a json decoded tree an replaces json.Number
+// with int64, float64, or string, in this order of preference (i.e. if it
+// parses as an int, use int. if it parses as a float, use float. etc).
+func transformNumbersDict(dict map[string]interface{}) {
+	for k, v := range dict {
+		switch vv := v.(type) {
+		case json.Number:
+			dict[k] = transformNumber(vv)
+		case map[string]interface{}:
+			transformNumbersDict(vv)
+		case []interface{}:
+			transformNumbersArray(vv)
+		}
+	}
+}
+
+func transformNumber(value json.Number) interface{} {
+	i64, err := value.Int64()
+	if err == nil {
+		return i64
+	}
+	f64, err := value.Float64()
+	if err == nil {
+		return f64
+	}
+	return value.String()
+}
+
+func transformNumbersArray(arr []interface{}) {
+	for i, v := range arr {
+		switch vv := v.(type) {
+		case json.Number:
+			arr[i] = transformNumber(vv)
+		case map[string]interface{}:
+			transformNumbersDict(vv)
+		case []interface{}:
+			transformNumbersArray(vv)
+		}
+	}
+}
+
 func NewApi2GoModelWithData(
 	name string,
 	columns []ColumnInfo,
@@ -293,6 +335,7 @@ func NewApi2GoModelWithData(
 	if m != nil {
 		m["__type"] = name
 	}
+	transformNumbersDict(m)
 	return Api2GoModel{
 		typeName:          name,
 		columns:           columns,
@@ -772,6 +815,7 @@ func (g Api2GoModel) GetID() string {
 
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	//log.Infof("set attributes: %v", attrs)
+	transformNumbersDict(attrs)
 	if g.Data == nil {
 		g.Data = attrs
 		return

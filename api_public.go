@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/artpar/api2go/jsonapi"
+	"./jsonapi"
 	"github.com/artpar/api2go/routing"
 )
 

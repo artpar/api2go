@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/artpar/api2go/jsonapi"
+	"./jsonapi"
 )
 
 // The Response struct implements api2go.Responder and can be used as a default

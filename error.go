@@ -55,7 +55,7 @@ func marshalHTTPError(input HTTPError) string {
 		input.Errors = []Error{{Title: input.msg, Status: strconv.Itoa(input.status)}}
 	}
 
-	data, err := json.Marshal(input)
+	data, err := jsonLib.Marshal(input)
 
 	if err != nil {
 		log.Println(err)
