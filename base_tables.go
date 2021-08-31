@@ -507,7 +507,7 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 					}
 					rows = append(rows, id)
 				}
-				//m.SetToOneReferenceID(name, IDs[0])
+				//m.SetToOneReferenceID(name, IDs[0])1
 				if len(rows) > 0 {
 					m.Data[name] = rows
 				}
@@ -794,7 +794,9 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 		}
 	}
 	//log.Printf("Set [%v] = [%v]", k, v)
-	g.Data = attrs
+	if g.dirty {
+		g.Data = attrs
+	}
 }
 
 type Change struct {
