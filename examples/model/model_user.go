@@ -3,7 +3,7 @@ package model
 import (
   "errors"
 
-  "./jsonapi"
+  "github.com/artpar/api2go/jsonapi"
 )
 
 // User is a generic database user

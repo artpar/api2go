@@ -1,7 +1,7 @@
 package api2go
 
 import (
-	"./jsonapi"
+	"github.com/artpar/api2go/jsonapi"
 	"errors"
 	"fmt"
 	jsoniter "github.com/json-iterator/go"

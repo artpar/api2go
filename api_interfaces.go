@@ -3,7 +3,7 @@ package api2go
 import (
 	"net/http"
 
-	"./jsonapi"
+	"github.com/artpar/api2go/jsonapi"
 )
 
 // The ResourceGetter interface MUST be implemented in order to generate the single GET route and related
