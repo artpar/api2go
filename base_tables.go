@@ -815,6 +815,9 @@ func (g Api2GoModel) GetID() string {
 	return id.String()
 }
 
+func (g *Api2GoModel) SetType(typeName string) {
+	g.data["__type"] = typeName
+}
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	//log.Infof("set attributes: %v", attrs)
 	transformNumbersDict(attrs)
