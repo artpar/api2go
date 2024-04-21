@@ -184,7 +184,7 @@ func setDataIntoTarget(data *Data, target interface{}) error {
 // SetToManyReferenceIDs
 func setRelationshipIDs(relationships map[string]Relationship, target UnmarshalIdentifier) error {
 	for name, rel := range relationships {
-		// if Data is nil, it means that we have an empty toOne relationship
+		// if data is nil, it means that we have an empty toOne relationship
 		if rel.Data == nil {
 			castedToOne, ok := target.(UnmarshalToOneRelations)
 			if !ok {

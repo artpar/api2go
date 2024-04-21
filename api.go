@@ -1,9 +1,9 @@
 package api2go
 
 import (
-	"github.com/artpar/api2go/jsonapi"
 	"errors"
 	"fmt"
+	"github.com/artpar/api2go/jsonapi"
 	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
@@ -853,7 +853,7 @@ func (res *resource) handleAddToManyRelation(c APIContexter, w http.ResponseWrit
 
 	newRels, ok := data.([]interface{})
 	if !ok {
-		return fmt.Errorf("Data must be an array with \"id\" and \"type\" field to add new to-many relationships")
+		return fmt.Errorf("data must be an array with \"id\" and \"type\" field to add new to-many relationships")
 	}
 
 	newIDs := []string{}
@@ -931,7 +931,7 @@ func (res *resource) handleDeleteToManyRelation(c APIContexter, w http.ResponseW
 
 	newRels, ok := data.([]interface{})
 	if !ok {
-		return fmt.Errorf("Data must be an array with \"id\" and \"type\" field to add new to-many relationships")
+		return fmt.Errorf("data must be an array with \"id\" and \"type\" field to add new to-many relationships")
 	}
 
 	obsoleteIDs := []string{}

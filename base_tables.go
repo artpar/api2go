@@ -134,7 +134,7 @@ type Api2GoModel struct {
 	defaultPermission int64
 	DeleteIncludes    map[string][]string
 	relations         []TableRelation
-	Data              map[string]interface{}
+	data              map[string]interface{}
 	oldData           map[string]interface{}
 	Includes          []jsonapi.MarshalIdentifier
 	dirty             bool
@@ -149,7 +149,7 @@ func (g Api2GoModel) GetNextVersion() int64 {
 	if g.dirty {
 		return g.oldData["version"].(int64) + 1
 	} else {
-		version, ok := g.Data["version"]
+		version, ok := g.data["version"]
 		if !ok {
 		}
 		return version.(int64) + 1
@@ -159,7 +159,7 @@ func (g Api2GoModel) GetNextVersion() int64 {
 func (g Api2GoModel) HasVersion() bool {
 	ok := false
 	if !g.dirty {
-		_, ok = g.Data["version"]
+		_, ok = g.data["version"]
 	} else {
 		_, ok = g.oldData["version"]
 	}
@@ -170,7 +170,7 @@ func (g Api2GoModel) GetCurrentVersion() int64 {
 	if g.dirty {
 		return g.oldData["version"].(int64)
 	} else {
-		return g.Data["version"].(int64)
+		return g.data["version"].(int64)
 	}
 }
 
@@ -340,7 +340,7 @@ func NewApi2GoModelWithData(
 		typeName:          name,
 		columns:           columns,
 		relations:         relations,
-		Data:              m,
+		data:              m,
 		defaultPermission: defaultPermission,
 		dirty:             false,
 	}
@@ -393,20 +393,20 @@ func (m Api2GoModel) SetToOneReferenceID(name, ID string) error {
 	if ID == "" {
 		return errors.New("referenced id cannot be set to to empty, use delete to remove")
 	}
-	existingVal, ok := m.Data[name]
+	existingVal, ok := m.data[name]
 	if !m.dirty && (!ok || existingVal != ID) {
 		m.dirty = true
 
 		tempMap := make(map[string]interface{})
 
-		for k1, v1 := range m.Data {
+		for k1, v1 := range m.data {
 			tempMap[k1] = v1
 		}
 
 		m.oldData = tempMap
 
 	}
-	m.Data[name] = ID
+	m.data[name] = ID
 	return nil
 
 	return errors.New("There is no to-one relationship with the name " + name)
@@ -493,8 +493,8 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 		referencedRelation.GetRelation() == "belongs_to") &&
 		m.typeName == referencedRelation.GetSubject() {
 		log.Infof("Has one or belongs to relation")
-		if m.Data[name] == IDs[0] {
-			//m.Data[name] = nil
+		if m.data[name] == IDs[0] {
+			//m.data[name] = nil
 			m.SetAttributes(map[string]interface{}{
 				name: nil,
 			})
@@ -525,14 +525,14 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 					//row := make(map[string]interface{})
 					//row[name] = id
 					if rel.GetSubjectName() == name {
-						id[rel.GetObjectName()] = m.Data["reference_id"]
+						id[rel.GetObjectName()] = m.data["reference_id"]
 					} else {
-						id[rel.GetSubjectName()] = m.Data["reference_id"]
+						id[rel.GetSubjectName()] = m.data["reference_id"]
 					}
 					rows = append(rows, id)
 				}
 				if len(rows) > 0 {
-					m.Data[name] = rows
+					m.data[name] = rows
 				}
 				return nil
 			} else if rel.GetRelation() == "has_one" {
@@ -542,17 +542,17 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 					//row := make(map[string]interface{})
 					//row[name] = id
 					if rel.GetSubjectName() == name {
-						id[rel.GetObjectName()] = m.Data["reference_id"]
+						id[rel.GetObjectName()] = m.data["reference_id"]
 						id["__type"] = rel.GetSubject()
 					} else if rel.GetSubjectName() == name {
 						id["__type"] = rel.GetObject()
-						id[rel.GetSubjectName()] = m.Data["reference_id"]
+						id[rel.GetSubjectName()] = m.data["reference_id"]
 					}
 					rows = append(rows, id)
 				}
 				//m.SetToOneReferenceID(name, IDs[0])1
 				if len(rows) > 0 {
-					m.Data[name] = rows
+					m.data[name] = rows
 				}
 				return nil
 			}
@@ -580,7 +580,7 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 		if rel.GetRelation() == "belongs_to" || rel.GetRelation() == "has_one" {
 			if rel.GetSubject() == m.typeName {
 
-				val, ok := m.Data[rel.GetObjectName()]
+				val, ok := m.data[rel.GetObjectName()]
 				if !ok || val == nil {
 					continue
 				}
@@ -593,7 +593,7 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 				}
 				references = append(references, ref)
 			} else {
-				val1, ok := m.Data[rel.GetSubjectName()]
+				val1, ok := m.data[rel.GetSubjectName()]
 				if !ok || val1 == nil {
 					continue
 				}
@@ -617,7 +617,7 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 			relationType = jsonapi.ToManyRelationship
 			if rel.GetSubject() == m.typeName {
 
-				val, ok := m.Data[rel.GetObjectName()]
+				val, ok := m.data[rel.GetObjectName()]
 				if !ok || val == nil {
 					continue
 				}
@@ -635,7 +635,7 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 
 			} else {
 
-				val, ok := m.Data[rel.GetSubjectName()]
+				val, ok := m.data[rel.GetSubjectName()]
 				if !ok || val == nil {
 					continue
 				}
@@ -732,7 +732,7 @@ func (m Api2GoModel) GetAttributes() map[string]interface{} {
 	colMap := m.GetColumnMap()
 
 	//log.Infof("Column Map for [%v]: %v", colMap["reference_id"])
-	for k, v := range m.Data {
+	for k, v := range m.data {
 
 		//if colMap[k].IsForeignKey {
 		//	continue
@@ -754,7 +754,7 @@ func (m Api2GoModel) GetAttributes() map[string]interface{} {
 func (m Api2GoModel) GetAllAsAttributes() map[string]interface{} {
 
 	attrs := make(map[string]interface{})
-	for k, v := range m.Data {
+	for k, v := range m.data {
 		attrs[k] = v
 	}
 	attrs["__type"] = m.GetTableName()
@@ -764,7 +764,7 @@ func (m Api2GoModel) GetAllAsAttributes() map[string]interface{} {
 
 func (m Api2GoModel) InitializeObject(interface{}) {
 	log.Infof("initialize object: %v", m)
-	m.Data = make(map[string]interface{})
+	m.data = make(map[string]interface{})
 }
 
 func (m *Api2GoModel) SetColumns(c []ColumnInfo) {
@@ -803,7 +803,7 @@ func (g Api2GoModel) GetColumnOriginalValue(columnName string) interface{} {
 	if g.IsDirty() {
 		return g.oldData[columnName]
 	}
-	return g.Data[columnName]
+	return g.data[columnName]
 }
 
 func (g Api2GoModel) GetID() string {
@@ -811,26 +811,26 @@ func (g Api2GoModel) GetID() string {
 		id, _ := uuid.FromBytes([]byte(g.oldData["reference_id"].(string)))
 		return id.String()
 	}
-	id, _ := uuid.FromBytes([]byte(g.Data["reference_id"].(string)))
+	id, _ := uuid.FromBytes([]byte(g.data["reference_id"].(string)))
 	return id.String()
 }
 
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	//log.Infof("set attributes: %v", attrs)
 	transformNumbersDict(attrs)
-	if g.Data == nil {
-		g.Data = attrs
+	if g.data == nil {
+		g.data = attrs
 		return
 	}
 	for k, v := range attrs {
 
-		existingValue, ok := g.Data[k]
+		existingValue, ok := g.data[k]
 		if !ok || v != existingValue {
 			if !g.dirty {
 				g.dirty = true
 				tempMap := make(map[string]interface{})
 
-				for k1, v1 := range g.Data {
+				for k1, v1 := range g.data {
 					tempMap[k1] = v1
 				}
 
@@ -841,7 +841,7 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	}
 	//log.Printf("Set [%v] = [%v]", k, v)
 	if g.dirty {
-		g.Data = attrs
+		g.data = attrs
 	}
 }
 
@@ -859,8 +859,8 @@ func (g Api2GoModel) GetAuditModel() Api2GoModel {
 		newData = copyMapWithSkipKeys(g.oldData, []string{"reference_id", "id"})
 		//newData["audit_object_id"] = g.oldData["reference_id"]
 	} else {
-		newData = copyMapWithSkipKeys(g.Data, []string{"reference_id", "id"})
-		//newData["audit_object_id"] = g.Data["reference_id"]
+		newData = copyMapWithSkipKeys(g.data, []string{"reference_id", "id"})
+		//newData["audit_object_id"] = g.data["reference_id"]
 	}
 
 	newData["__type"] = auditTableName
@@ -891,7 +891,7 @@ func (g Api2GoModel) GetChanges() map[string]Change {
 		return changeMap
 	}
 
-	for key, newVal := range g.Data {
+	for key, newVal := range g.data {
 		if g.oldData[key] != newVal {
 			changeMap[key] = Change{
 				OldValue: g.oldData[key],
@@ -910,15 +910,15 @@ func (g Api2GoModel) GetUnmodifiedAttributes() map[string]interface{} {
 	if g.dirty {
 		return g.oldData
 	}
-	return g.Data
+	return g.data
 }
 
 func (g *Api2GoModel) SetID(str string) error {
 	//log.Infof("set id: %v", str)
-	if g.Data == nil {
-		g.Data = make(map[string]interface{})
+	if g.data == nil {
+		g.data = make(map[string]interface{})
 	}
-	g.Data["reference_id"] = str
+	g.data["reference_id"] = str
 	return nil
 }
 
@@ -927,11 +927,11 @@ type HasId interface {
 }
 
 func (g Api2GoModel) GetReferenceId() string {
-	return fmt.Sprintf("%v", g.Data["reference_id"])
+	return fmt.Sprintf("%v", g.data["reference_id"])
 }
 
 func (g *Api2GoModel) BeforeCreate() (err error) {
 	u, _ := uuid.NewV7()
-	g.Data["reference_id"] = u
+	g.data["reference_id"] = u
 	return nil
 }
