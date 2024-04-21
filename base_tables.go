@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/artpar/api2go/jsonapi"
-	"github.com/artpar/go.uuid"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"strings"
 )
@@ -808,9 +808,11 @@ func (g Api2GoModel) GetColumnOriginalValue(columnName string) interface{} {
 
 func (g Api2GoModel) GetID() string {
 	if g.IsDirty() {
-		return fmt.Sprintf("%v", g.oldData["reference_id"])
+		id, _ := uuid.FromBytes(g.oldData["reference_id"].([]byte))
+		return id.String()
 	}
-	return fmt.Sprintf("%v", g.Data["reference_id"])
+	id, _ := uuid.FromBytes(g.Data["reference_id"].([]byte))
+	return id.String()
 }
 
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
@@ -929,7 +931,7 @@ func (g Api2GoModel) GetReferenceId() string {
 }
 
 func (g *Api2GoModel) BeforeCreate() (err error) {
-	u, _ := uuid.NewV4()
-	g.Data["reference_id"] = u.String()
+	u, _ := uuid.NewV7()
+	g.Data["reference_id"] = u
 	return nil
 }
