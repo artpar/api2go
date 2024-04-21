@@ -818,6 +818,9 @@ func (g Api2GoModel) GetID() string {
 func (g *Api2GoModel) SetType(typeName string) {
 	g.data["__type"] = typeName
 }
+func (g *Api2GoModel) Set(columnName string, value interface{}) {
+	g.data[columnName] = value
+}
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	//log.Infof("set attributes: %v", attrs)
 	transformNumbersDict(attrs)
