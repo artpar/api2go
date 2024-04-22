@@ -759,6 +759,15 @@ func (m Api2GoModel) GetAllAsAttributes() map[string]interface{} {
 	}
 	attrs["__type"] = m.GetTableName()
 
+	if m.dirty {
+		for k, v := range m.oldData {
+			_, o := attrs[k]
+			if !o {
+				attrs[k] = v
+			}
+		}
+	}
+
 	return attrs
 }
 
