@@ -846,6 +846,7 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 		if k == "reference_id" && isStr {
 			v = uuid.MustParse(strVal)
 			attrs[k] = v
+			continue
 		}
 
 		existingValue, ok := g.data[k]
