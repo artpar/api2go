@@ -746,11 +746,6 @@ func (m Api2GoModel) GetAttributes() map[string]interface{} {
 			v = ""
 		}
 
-		if colMap[k].ColumnName == "reference_id" {
-			x, _ := uuid.FromBytes([]byte(v.(string)))
-			v = x.String()
-		}
-
 		attrs[k] = v
 	}
 	return attrs
