@@ -808,11 +808,11 @@ func (g Api2GoModel) GetColumnOriginalValue(columnName string) interface{} {
 
 func (g Api2GoModel) GetID() string {
 	if g.IsDirty() {
-		id, _ := uuid.FromBytes(g.oldData["reference_id"].([]byte))
-		return id.String()
+		id, _ := g.oldData["reference_id"]
+		return id.(fmt.Stringer).String()
 	}
-	id, _ := uuid.FromBytes(g.data["reference_id"].([]byte))
-	return id.String()
+	id, _ := g.data["reference_id"]
+	return id.(fmt.Stringer).String()
 }
 
 func (g *Api2GoModel) SetType(typeName string) {
