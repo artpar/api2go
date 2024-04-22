@@ -821,7 +821,11 @@ func (g Api2GoModel) GetID() string {
 		return id.(fmt.Stringer).String()
 	}
 	id, _ := g.data["reference_id"]
-	return id.(fmt.Stringer).String()
+	if str, ok := id.(fmt.Stringer); ok {
+		return str.String()
+	} else {
+		return fmt.Sprintf("%s", str)
+	}
 }
 
 func (g *Api2GoModel) SetType(typeName string) {
