@@ -7,6 +7,7 @@ import (
 	"github.com/artpar/api2go/jsonapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"reflect"
 	"strings"
 )
 
@@ -834,6 +835,17 @@ func (g *Api2GoModel) SetType(typeName string) {
 func (g *Api2GoModel) Set(columnName string, value interface{}) {
 	g.data[columnName] = value
 }
+
+func isEqual(a, b interface{}) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
+		return false
+	}
+	if reflect.DeepEqual(a, b) {
+		return true
+	}
+	return false
+}
+
 func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 	//log.Infof("set attributes: %v", attrs)
 	transformNumbersDict(attrs)
@@ -850,7 +862,7 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 		}
 
 		existingValue, ok := g.data[k]
-		if !ok || v != existingValue {
+		if !ok || !isEqual(existingValue, v) {
 			if !g.dirty {
 				g.dirty = true
 				tempMap := make(map[string]interface{})
