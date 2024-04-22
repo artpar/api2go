@@ -829,6 +829,10 @@ func (g *Api2GoModel) SetAttributes(attrs map[string]interface{}) {
 		return
 	}
 	for k, v := range attrs {
+		strVal, isStr := v.(string)
+		if k == "reference_id" && isStr {
+			v = uuid.MustParse(strVal)
+		}
 
 		existingValue, ok := g.data[k]
 		if !ok || v != existingValue {
