@@ -825,7 +825,7 @@ func (g Api2GoModel) GetID() string {
 	if str, ok := id.(fmt.Stringer); ok {
 		return str.String()
 	} else {
-		return fmt.Sprintf("%s", str)
+		return fmt.Sprintf("%s", id)
 	}
 }
 
