@@ -586,10 +586,19 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 					continue
 				}
 
+				stringValue, ok := val.(string)
+				if !ok {
+					valStringer, isStringer := val.(fmt.Stringer)
+					if isStringer {
+						stringValue = valStringer.String()
+					} else {
+						stringValue = fmt.Sprintf("%v", val)
+					}
+				}
 				ref := jsonapi.ReferenceID{
 					Type:         rel.GetObject(),
 					Name:         rel.GetObjectName(),
-					ID:           val.(string),
+					ID:           stringValue,
 					Relationship: relationType,
 				}
 				references = append(references, ref)
