@@ -828,7 +828,11 @@ func (g Api2GoModel) GetColumnOriginalValue(columnName string) interface{} {
 func (g Api2GoModel) GetID() string {
 	if g.IsDirty() {
 		id, _ := g.oldData["reference_id"]
-		return id.(fmt.Stringer).String()
+		if str, ok := id.(fmt.Stringer); ok {
+			return str.String()
+		} else {
+			return fmt.Sprintf("%s", id)
+		}
 	}
 	id, _ := g.data["reference_id"]
 	if str, ok := id.(fmt.Stringer); ok {
