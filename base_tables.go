@@ -967,16 +967,6 @@ func (g Api2GoModel) GetChanges() map[string]Change {
 		}
 	}
 
-	// Check for deleted fields (exist in old but not in new)
-	for key, oldVal := range g.oldData {
-		if _, exists := g.data[key]; !exists {
-			changeMap[key] = Change{
-				OldValue: oldVal,
-				NewValue: nil,
-			}
-		}
-	}
-
 	return changeMap
 }
 
