@@ -389,7 +389,7 @@ func EndsWithCheck(str string, endsWith string) bool {
 
 }
 
-func (m Api2GoModel) SetToOneReferenceID(name, ID string) error {
+func (m *Api2GoModel) SetToOneReferenceID(name, ID string) error {
 
 	if ID == "" {
 		return errors.New("referenced id cannot be set to to empty, use delete to remove")
