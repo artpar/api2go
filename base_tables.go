@@ -935,20 +935,48 @@ func copyMapWithSkipKeys(dataMap map[string]interface{}, skipKeys []string) map[
 	return newData
 }
 
+// GetChanges returns a map of changes between the current and old data
+// Improved to handle complex types like slices and maps
 func (g Api2GoModel) GetChanges() map[string]Change {
 	changeMap := make(map[string]Change)
+
+	// Early return if not dirty
 	if !g.dirty {
 		return changeMap
 	}
 
+	// Check what's changed in existing fields
 	for key, newVal := range g.data {
-		if g.oldData[key] != newVal {
+		oldVal, exists := g.oldData[key]
+
+		// If key doesn't exist in oldData, it's a new field
+		if !exists {
 			changeMap[key] = Change{
-				OldValue: g.oldData[key],
+				OldValue: nil,
+				NewValue: newVal,
+			}
+			continue
+		}
+
+		// Use AreValuesEqual for proper deep comparison of all types
+		if !AreValuesEqual(oldVal, newVal) {
+			changeMap[key] = Change{
+				OldValue: oldVal,
 				NewValue: newVal,
 			}
 		}
 	}
+
+	// Check for deleted fields (exist in old but not in new)
+	for key, oldVal := range g.oldData {
+		if _, exists := g.data[key]; !exists {
+			changeMap[key] = Change{
+				OldValue: oldVal,
+				NewValue: nil,
+			}
+		}
+	}
+
 	return changeMap
 }
 
