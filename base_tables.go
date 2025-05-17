@@ -1,7 +1,7 @@
 package api2go
 
 import (
-	"api2go/jsonapi"
+	jsonapi "api2go/jsonapi"
 	"encoding/json"
 	"errors"
 	"fmt"

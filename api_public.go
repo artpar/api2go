@@ -1,12 +1,11 @@
 package api2go
 
 import (
+	jsonapi "api2go/jsonapi"
+	routing "api2go/routing"
 	"net/http"
 	"strings"
 	"sync"
-
-	"github.com/artpar/api2go/jsonapi"
-	"github.com/artpar/api2go/routing"
 )
 
 // HandlerFunc for api2go middlewares
@@ -28,7 +27,7 @@ func (api API) Handler() http.Handler {
 	return api.router.Handler()
 }
 
-//Router returns the specified router on an api instance
+// Router returns the specified router on an api instance
 func (api API) Router() routing.Routeable {
 	return api.router
 }
