@@ -1,10 +1,10 @@
 package api2go
 
 import (
-	jsonapi "api2go/jsonapi"
 	"encoding/json"
 	"errors"
 	"fmt"
+	jsonapi "github.com/artpar/api2go/jsonapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"reflect"
