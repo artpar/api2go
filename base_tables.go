@@ -670,15 +670,29 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 					continue
 				}
 
-				valList := val.([]string)
-				for _, valId := range valList {
-					ref := jsonapi.ReferenceID{
-						Type:         rel.GetSubject(),
-						Name:         rel.GetSubjectName(),
-						ID:           valId,
-						Relationship: relationType,
+				valList, ok := val.([]string)
+				if ok {
+					for _, valId := range valList {
+						ref := jsonapi.ReferenceID{
+							Type:         rel.GetSubject(),
+							Name:         rel.GetSubjectName(),
+							ID:           valId,
+							Relationship: relationType,
+						}
+						references = append(references, ref)
 					}
-					references = append(references, ref)
+				} else {
+					valInterfaceList, _ := val.([]interface{})
+					for _, valInterface := range valInterfaceList {
+						valString := valInterface.(fmt.Stringer).String()
+						ref := jsonapi.ReferenceID{
+							Type:         rel.GetSubject(),
+							Name:         rel.GetSubjectName(),
+							ID:           valString,
+							Relationship: relationType,
+						}
+						references = append(references, ref)
+					}
 				}
 
 			}
