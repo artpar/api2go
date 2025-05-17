@@ -225,6 +225,10 @@ func (a Api2GoModel) GetRelations() []TableRelation {
 	return a.relations
 }
 
+func (a *Api2GoModel) SetRelations(relations []TableRelation) {
+	a.relations = relations
+}
+
 type ValueOptions struct {
 	ValueType string
 	Value     interface{}
@@ -409,8 +413,60 @@ func (m *Api2GoModel) SetToOneReferenceID(name, ID string) error {
 	}
 	m.data[name] = ID
 	return nil
+}
 
-	return errors.New("There is no to-one relationship with the name " + name)
+func (m *Api2GoModel) ObjectInitializer(newObject *Api2GoModel) error {
+
+}
+
+func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interface{}) error {
+
+	for _, rel := range m.relations {
+		//log.Infof("Check relation: %v", rel.String())
+		if rel.GetObjectName() == name || rel.GetSubjectName() == name {
+			if rel.GetRelation() == "has_many" || rel.GetRelation() == "has_many_and_belongs_to_many" {
+
+				var rows = make([]map[string]interface{}, 0)
+				for _, id := range IDs {
+					//row := make(map[string]interface{})
+					//row[name] = id
+					if rel.GetSubjectName() == name {
+						id[rel.GetObjectName()] = m.data["reference_id"]
+					} else {
+						id[rel.GetSubjectName()] = m.data["reference_id"]
+					}
+					rows = append(rows, id)
+				}
+				if len(rows) > 0 {
+					m.data[name] = rows
+				}
+				return nil
+			} else if rel.GetRelation() == "has_one" {
+
+				var rows = make([]map[string]interface{}, 0)
+				for _, id := range IDs {
+					//row := make(map[string]interface{})
+					//row[name] = id
+					if rel.GetSubjectName() == name {
+						id[rel.GetObjectName()] = m.data["reference_id"]
+						id["__type"] = rel.GetSubject()
+					} else if rel.GetSubjectName() == name {
+						id["__type"] = rel.GetObject()
+						id[rel.GetSubjectName()] = m.data["reference_id"]
+					}
+					rows = append(rows, id)
+				}
+				//m.SetToOneReferenceID(name, IDs[0])1
+				if len(rows) > 0 {
+					m.data[name] = rows
+				}
+				return nil
+			}
+		}
+	}
+
+	return nil
+
 }
 
 // The EditToManyRelations interface can be optionally implemented to add and
@@ -512,56 +568,6 @@ func (m *Api2GoModel) DeleteToManyIDs(name string, IDs []string) error {
 	}
 	log.Infof("New to deletes: %v", m.DeleteIncludes)
 	return nil
-}
-
-func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interface{}) error {
-
-	for _, rel := range m.relations {
-		//log.Infof("Check relation: %v", rel.String())
-		if rel.GetObjectName() == name || rel.GetSubjectName() == name {
-			if rel.GetRelation() == "has_many" || rel.GetRelation() == "has_many_and_belongs_to_many" {
-
-				var rows = make([]map[string]interface{}, 0)
-				for _, id := range IDs {
-					//row := make(map[string]interface{})
-					//row[name] = id
-					if rel.GetSubjectName() == name {
-						id[rel.GetObjectName()] = m.data["reference_id"]
-					} else {
-						id[rel.GetSubjectName()] = m.data["reference_id"]
-					}
-					rows = append(rows, id)
-				}
-				if len(rows) > 0 {
-					m.data[name] = rows
-				}
-				return nil
-			} else if rel.GetRelation() == "has_one" {
-
-				var rows = make([]map[string]interface{}, 0)
-				for _, id := range IDs {
-					//row := make(map[string]interface{})
-					//row[name] = id
-					if rel.GetSubjectName() == name {
-						id[rel.GetObjectName()] = m.data["reference_id"]
-						id["__type"] = rel.GetSubject()
-					} else if rel.GetSubjectName() == name {
-						id["__type"] = rel.GetObject()
-						id[rel.GetSubjectName()] = m.data["reference_id"]
-					}
-					rows = append(rows, id)
-				}
-				//m.SetToOneReferenceID(name, IDs[0])1
-				if len(rows) > 0 {
-					m.data[name] = rows
-				}
-				return nil
-			}
-		}
-	}
-
-	return nil
-
 }
 
 func (m Api2GoModel) GetReferencedStructs() []jsonapi.MarshalIdentifier {
