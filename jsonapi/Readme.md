@@ -4,7 +4,7 @@ This package contains [JSON API](http://jsonapi.org) compatible
 marshal und unmarshal functionality.
 
 ```
-  go get github.com/artpar/api2go/jsonapi
+  go get github.com/artpar/api2go/v2/jsonapi
 ```
 
 ## Usage

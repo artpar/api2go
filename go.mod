@@ -1,4 +1,4 @@
-module github.com/artpar/api2go
+module github.com/artpar/api2go/v2
 
 go 1.21
 

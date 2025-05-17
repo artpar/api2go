@@ -1,8 +1,8 @@
 package api2go
 
 import (
-	"github.com/artpar/api2go/jsonapi"
-	"github.com/artpar/api2go/routing"
+	"github.com/artpar/api2go/v2/jsonapi"
+	"github.com/artpar/api2go/v2/routing"
 	"net/http"
 	"strings"
 	"sync"

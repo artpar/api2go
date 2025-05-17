@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	jsonapi "github.com/artpar/api2go/jsonapi"
+	jsonapi "github.com/artpar/api2go/v2/jsonapi"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"reflect"

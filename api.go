@@ -3,7 +3,7 @@ package api2go
 import (
 	"errors"
 	"fmt"
-	"github.com/artpar/api2go/jsonapi"
+	"github.com/artpar/api2go/v2/jsonapi"
 	jsoniter "github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/artpar/api2go/routing"
+	"github.com/artpar/api2go/v2/routing"
 )
 
 var jsonLib = jsoniter.ConfigCompatibleWithStandardLibrary
