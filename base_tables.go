@@ -426,6 +426,7 @@ func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interf
 				for _, id := range IDs {
 					//row := make(map[string]interface{})
 					//row[name] = id
+					id["reference_id"] = id["id"]
 					if rel.GetSubjectName() == name {
 						id[rel.GetObjectName()] = m.data["reference_id"]
 					} else {
