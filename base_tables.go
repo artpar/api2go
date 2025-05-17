@@ -612,16 +612,33 @@ func (m Api2GoModel) GetReferencedIDs() []jsonapi.ReferenceID {
 				}
 
 				relationType = jsonapi.ToManyRelationship
-				valueList := val1.([]string)
+				valueList, ok := val1.([]string)
 
-				for _, val := range valueList {
-					ref := jsonapi.ReferenceID{
-						Type:         rel.GetSubject(),
-						Name:         rel.GetSubjectName(),
-						ID:           val,
-						Relationship: relationType,
+				if ok {
+					for _, val := range valueList {
+						ref := jsonapi.ReferenceID{
+							Type:         rel.GetSubject(),
+							Name:         rel.GetSubjectName(),
+							ID:           val,
+							Relationship: relationType,
+						}
+						references = append(references, ref)
 					}
-					references = append(references, ref)
+				} else {
+					valueListInterface, ok1 := val1.([]interface{})
+					if ok1 {
+						for _, val := range valueListInterface {
+							valString := val.(fmt.Stringer).String()
+							ref := jsonapi.ReferenceID{
+								Type:         rel.GetSubject(),
+								Name:         rel.GetSubjectName(),
+								ID:           valString,
+								Relationship: relationType,
+							}
+							references = append(references, ref)
+						}
+					}
+
 				}
 
 			}
