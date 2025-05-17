@@ -415,10 +415,6 @@ func (m *Api2GoModel) SetToOneReferenceID(name, ID string) error {
 	return nil
 }
 
-func (m *Api2GoModel) ObjectInitializer(newObject *Api2GoModel) error {
-
-}
-
 func (m *Api2GoModel) SetToManyReferenceIDs(name string, IDs []map[string]interface{}) error {
 
 	for _, rel := range m.relations {
@@ -785,11 +781,6 @@ func (m Api2GoModel) GetAllAsAttributes() map[string]interface{} {
 	}
 
 	return attrs
-}
-
-func (m Api2GoModel) InitializeObject(interface{}) {
-	log.Infof("initialize object: %v", m)
-	m.data = make(map[string]interface{})
 }
 
 func (m *Api2GoModel) SetColumns(c []ColumnInfo) {
