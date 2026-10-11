@@ -81,15 +81,15 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 	prefix := ""
 	baseURL := info.GetBaseURL()
 	if baseURL != "" {
-		prefix = baseURL
+		prefix = strings.TrimRight(baseURL, "/")
 	}
 	requestURL := fmt.Sprintf("%s%s", prefix, r.URL.Path)
 
-	if p.number == "" {
+	if p.number == "" && p.offset == "" {
 		p.number = "1"
 	}
 
-	if p.size == "" {
+	if p.size == "" && p.limit == "" {
 		p.size = "10"
 	}
 
@@ -101,7 +101,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 			return
 		}
 
-		if p.number != "1" {
+		if number > 1 {
 			params.Set("page[number]", "1")
 			query, _ := url.QueryUnescape(params.Encode())
 			result["first_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
@@ -135,7 +135,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 		result["from"] = (number - 1) * size
 		result["to"] = (number) * size
 
-		if number != totalPages {
+		if number < totalPages {
 			params.Set("page[number]", strconv.FormatUint(number+1, 10))
 			query, _ := url.QueryUnescape(params.Encode())
 			result["next_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
@@ -156,7 +156,7 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 			return
 		}
 
-		if p.offset != "0" {
+		if offset > 0 {
 			params.Set("page[offset]", "0")
 			query, _ := url.QueryUnescape(params.Encode())
 			result["first_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
@@ -173,12 +173,12 @@ func (p paginationQueryParams) getLinks(r *http.Request, count uint, info inform
 		}
 
 		// check if there are more entries to be loaded
-		if (offset + limit) < uint64(count) {
+		if limit > 0 && offset < uint64(count) && limit < uint64(count)-offset {
 			params.Set("page[offset]", strconv.FormatUint(offset+limit, 10))
 			query, _ := url.QueryUnescape(params.Encode())
 			result["next_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
 
-			params.Set("page[offset]", strconv.FormatUint(uint64(count)-limit, 10))
+			params.Set("page[offset]", strconv.FormatUint((uint64(count)-1)/limit*limit, 10))
 			query, _ = url.QueryUnescape(params.Encode())
 			result["last_page_url"] = jsonapi.Link{Href: fmt.Sprintf("%s?%s", requestURL, query)}
 		}
@@ -544,6 +544,80 @@ func (res *resource) handleRead(c APIContexter, w http.ResponseWriter, r *http.R
 }
 
 func (res *resource) handleReadRelation(c APIContexter, w http.ResponseWriter, r *http.Request, params map[string]string, info information, relation jsonapi.Reference) error {
+	// A parent may provide a paged read of its own linkage. The ordinary
+	// FindOne/GetReferencedIDs contract remains the fallback for every other
+	// resource, regardless of whether the target collection is registered.
+	pagination := newPaginationQueryParams(r)
+	if reader, ok := res.source.(RelationshipGetter); ok &&
+		(relation.Relationship == jsonapi.ToManyRelationship || relation.Relationship == jsonapi.DefaultRelationship && jsonapi.Pluralize(relation.Name) == relation.Name) {
+		count, response, err := reader.FindRelationship(params["id"], relation, buildRequest(c, r))
+		if err != nil {
+			return err
+		}
+		if response == nil {
+			return fmt.Errorf("Resource %s returned no relationship", res.name)
+		}
+		rel, ok := response.Result().(jsonapi.Relationship)
+		if !ok {
+			return fmt.Errorf("Resource %s returned an invalid relationship", res.name)
+		}
+		if rel.Data == nil || rel.Data.DataArray == nil || rel.Data.DataObject != nil {
+			return fmt.Errorf("Resource %s returned a non-collection relationship", res.name)
+		}
+		if rel.Meta != nil {
+			meta := make(map[string]interface{}, len(rel.Meta))
+			for key, value := range rel.Meta {
+				meta[key] = value
+			}
+			rel.Meta = meta
+		}
+		if rel.Links != nil {
+			links := make(jsonapi.Links, len(rel.Links))
+			for key, value := range rel.Links {
+				links[key] = value
+			}
+			rel.Links = links
+		}
+		if meta := response.Metadata(); len(meta) > 0 {
+			if rel.Meta == nil {
+				rel.Meta = make(map[string]interface{}, len(meta))
+			}
+			for key, value := range meta {
+				rel.Meta[key] = value
+			}
+		}
+		var links jsonapi.Links
+		if linked, ok := response.(LinksResponder); ok {
+			baseURL := strings.Trim(info.GetBaseURL(), "/")
+			sourceLinks := linked.Links(r, baseURL+r.URL.Path)
+			if sourceLinks != nil {
+				links = make(jsonapi.Links, len(sourceLinks))
+				for key, value := range sourceLinks {
+					links[key] = value
+				}
+			}
+		}
+		if !hasPaginationLinks(links) && !hasPaginationLinks(rel.Links) {
+			var generated jsonapi.Links
+			generated, err = pagination.getLinks(r, count, info)
+			if err != nil {
+				return err
+			}
+			if links == nil {
+				links = make(jsonapi.Links, len(generated))
+			}
+			for key, value := range generated {
+				links[key] = value
+			}
+		}
+		if rel.Links == nil {
+			rel.Links = make(jsonapi.Links, len(links))
+		}
+		for key, value := range links {
+			rel.Links[key] = value
+		}
+		return res.marshalResponse(rel, w, http.StatusOK, r)
+	}
 	source, ok := res.source.(ResourceGetter)
 
 	if !ok {
@@ -572,6 +646,16 @@ func (res *resource) handleReadRelation(c APIContexter, w http.ResponseWriter, r
 	}
 
 	return res.marshalResponse(rel, w, http.StatusOK, r)
+}
+
+func hasPaginationLinks(links jsonapi.Links) bool {
+	for key := range links {
+		switch key {
+		case "next", "prev", "first", "last", "next_page_url", "prev_page_url", "first_page_url", "last_page_url", "total", "per_page", "current_page", "last_page", "from", "to":
+			return true
+		}
+	}
+	return false
 }
 
 // try to find the referenced resource and call the findAll Method with referencing resource id as param

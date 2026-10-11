@@ -13,6 +13,14 @@ type ResourceGetter interface {
 	FindOne(ID string, req Request) (Responder, error)
 }
 
+// RelationshipGetter lets a parent resource read its own to-many linkage.
+// Result must be a jsonapi.Relationship. The implementation is responsible for
+// parent authorization and for selecting the linked identifiers. A nil
+// response is invalid; resources without this interface use FindOne.
+type RelationshipGetter interface {
+	FindRelationship(ID string, relation jsonapi.Reference, req Request) (totalCount uint, response Responder, err error)
+}
+
 // The CRUD interface embed all interfaces at once: `ResourceCreator`, `ResourceDeleter`, `ResourceUpdater` (which includes `ResourceGetter`)
 type CRUD interface {
 	ResourceCreator
